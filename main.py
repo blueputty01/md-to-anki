@@ -8,16 +8,16 @@ from urllib.parse import unquote
 
 DECKS = {
     "math::math240 linear algebra": r"D:\Documents\Obsidian\default\$vault\school\year 1\math240",
-    "socy": r"D:\Documents\Obsidian\default\$vault\school\year 1\socy230",
+    "socy::socy100": r"D:\Documents\Obsidian\default\$vault\school\year 1\socy100",
+    "socy::socy230": r"D:\Documents\Obsidian\default\$vault\school\year 1\socy230",
 }
-
 
 # iterate through all markdown files in directory, ignoring files that begin with _.
 # then, read yaml frontmatter and ignore files that have "imported" set to true.
 # finally, parse the markdown into anki cards and import them using the AnkiConnect api
 
 
-def parse_markdown(content, deck_name, tag, path):
+def parse_markdown(content, deck_name, tag, media_root):
     def create_card(t, e):
         t = t.strip()
         e = e.strip()
@@ -25,8 +25,8 @@ def parse_markdown(content, deck_name, tag, path):
         cloze_id = 1
         bold_matches = re.findall(r'\*\*(.*?)\*\*', t)
         for bold_text in bold_matches:
-            cloze_text = bold_text[2:-2]
-            if not re.match(r'^\d+::.*', cloze_text):
+            cloze_text = bold_text
+            if not re.match(r'^\d+::.*', bold_text):
                 cloze_text = f"{cloze_id}::{bold_text}"
                 cloze_id += 1
             cloze_text = f"{{{{c{cloze_text}}}}}"
@@ -36,6 +36,8 @@ def parse_markdown(content, deck_name, tag, path):
         def general_conversion(s):
             s = markdown2.markdown(s, extras=["fenced-code-blocks", "tables", "cuddled-lists", "code-friendly",
                                               "footnotes", "header-ids", "smarty-pants", "target-blank-links"])
+
+            s = s.replace("<p>", "").replace("</p>", "")
 
             # process latex
             ml_latex = re.findall(r'\$\$(.*?)\$\$', s)
@@ -64,7 +66,7 @@ def parse_markdown(content, deck_name, tag, path):
                 return sha1.hexdigest()
 
             for image in images:
-                image_path = os.path.join(path, unquote(image).replace("/", os.sep))
+                image_path = os.path.join(media_root, unquote(image).replace("/", os.sep))
                 _, ext = os.path.splitext(image_path)
 
                 image_id = hash_file(image_path)
@@ -110,12 +112,21 @@ def parse_markdown(content, deck_name, tag, path):
     is_building_ml_extra = False
 
     append = False
-    for line in content:
+    for line in iter(content):
+        # only strip on right to prevent stripping of indent/extra indicator
+        line = line.rstrip()
+
         if line == "+":
             text += "\n"
             continue
 
         if line == "---":
+            if is_building_ml_extra:
+                all.append(create_card(text, extra))
+                text = ''
+                extra = ''
+                append = False
+
             is_building_ml_extra = not is_building_ml_extra
             if is_building_ml_extra:
                 append = False
@@ -133,9 +144,9 @@ def parse_markdown(content, deck_name, tag, path):
             text = ''
             extra = ''
 
-        if is_building_ml_extra or line.startswith("\t"):
+        if is_building_ml_extra or line.startswith("\t") or line.startswith(" "):
             append = False
-            extra += line.strip("\t")
+            extra += line.lstrip()
             extra += "\n"
         else:
             append = False
@@ -158,7 +169,6 @@ def main():
                 all_cards = []
                 # Process only Markdown files and ignore files starting with '_'
                 if not file.startswith("_") and file.endswith(".md"):
-                    print(f"Processing {file}")
 
                     file_path = os.path.join(root, file)
 
@@ -177,6 +187,7 @@ def main():
                             if front_matter.get("imported"):
                                 continue
 
+                        print(f"Processing {file}")
                         tag = "#"
                         tag += "::#".join(deck_name.replace(" ", "").split("::"))
 
@@ -191,7 +202,22 @@ def main():
 
                     with open(file_path, "w", encoding="utf-8") as f:
                         # import cards using AnkiConnect api
-                        anki.send_notes(all_cards)
+                        rejected = anki.send_notes(all_cards)
+
+                        if rejected:
+                            base_file_name = "output"
+                            file_extension = ".txt"
+                            counter = 1
+
+                            while os.path.exists(f"{base_file_name}_{counter}{file_extension}"):
+                                counter += 1
+
+                            file_name = f"{base_file_name}_{counter}{file_extension}"
+
+                            with open(file_name, "w") as error_file:
+                                error_file.write("\n".join(rejected))
+
+                            print(f"Output written to {file_name}")
 
                         # set "imported" to true in yaml frontmatter
                         front_matter["imported"] = True
@@ -204,3 +230,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    # with open("test.md", "r", encoding="utf-8") as f:
+    #     content = f.read()
+    #     test = parse_markdown(content, "temp", "#delete", "root")
+    # print(test)

@@ -1,1 +1,1 @@
-start cmd /k "D: & cd D:\Documents\_School\anki\anki-utils\md-to-anki & \venv\Scripts\python.exe -u D:\Documents\_School\anki\anki-utils\md-to-anki\main.py"
+start cmd /k "D: & cd D:\Documents\_School\anki\anki-utils\md-to-anki & .\venv\Scripts\activate.bat & python main.py"
