@@ -1,11 +1,10 @@
 # Google Doc to Anki 📄
 
-Imports Google Doc into Anki (spaced repetition software) to keep memory of notes fresh.
+Imports Markdown files into Anki (spaced repetition software) to keep memory of notes fresh.
 
 # How to use 🤔
 
-1. Create a Google Doc using the guidelines below
-2. Download the Google Doc as a zipped HTML file and run the code with modifications based on the file name location
+1. Run the code with modifications based on the markdown file location.
 
 ## Features ⚒️
 
