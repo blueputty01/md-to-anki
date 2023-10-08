@@ -5,11 +5,11 @@ import os
 
 
 def request(action, **params):
-    return {'action': action, 'params': params, 'version': 6}
+    return {"action": action, "params": params, "version": 6}
 
 
 def invoke(action, **params):
-    request_json = json.dumps(request(action, **params)).encode('utf-8')
+    request_json = json.dumps(request(action, **params)).encode("utf-8")
     # print(request_json)
 
     a_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -19,18 +19,21 @@ def invoke(action, **params):
 
     if result_of_check == 0:
         # print("Port is open")
-        response = json.load(urllib.request.urlopen(
-            urllib.request.Request('http://localhost:8765', request_json)))
+        response = json.load(
+            urllib.request.urlopen(
+                urllib.request.Request("http://localhost:8765", request_json)
+            )
+        )
 
         if len(response) != 2:
-            raise Exception('response has an unexpected number of fields')
-        if 'error' not in response:
-            raise Exception('response is missing required error field')
-        if 'result' not in response:
-            raise Exception('response is missing required result field')
-        if response['error'] is not None:
-            raise Exception(response['error'])
-        return response['result']
+            raise Exception("response has an unexpected number of fields")
+        if "error" not in response:
+            raise Exception("response is missing required error field")
+        if "result" not in response:
+            raise Exception("response is missing required result field")
+        if response["error"] is not None:
+            raise Exception(response["error"])
+        return response["result"]
     else:
         print("Port is closed")
         return
@@ -38,7 +41,7 @@ def invoke(action, **params):
 
 def send_notes(notes):
     print("Sending notes")
-    result = invoke('addNotes', notes=notes)
+    result = invoke("addNotes", notes=notes)
     rejected = []
 
     total = len(notes)
@@ -47,14 +50,16 @@ def send_notes(notes):
             rejected.append(f'{note["fields"]} under {note["deckName"]}')
 
     rej_count = len(rejected)
-    print(f'{total - rej_count} / {total} notes were successfully added to Anki.')
+    print(f"{total - rej_count} / {total} notes were successfully added to Anki.")
     if rej_count > 0:
         print("The following notes were rejected by Anki:")
-        print(*rejected, sep='\n')
+        print(*rejected, sep="\n")
+        return rejected
+    return []
     # print("Action complete")
 
 
 def send_media(media):
     print("Sending media")
-    invoke('storeMediaFile', **media)
+    invoke("storeMediaFile", **media)
     # print("Action complete")

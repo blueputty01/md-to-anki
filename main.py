@@ -5,12 +5,7 @@ import markdown2
 import yaml
 import anki
 from urllib.parse import unquote
-
-DECKS = {
-    "math::math240 linear algebra": r"D:\Documents\Obsidian\default\$vault\school\year 1\math240",
-    "socy::socy100": r"D:\Documents\Obsidian\default\$vault\school\year 1\socy100",
-    "socy::socy230": r"D:\Documents\Obsidian\default\$vault\school\year 1\socy230",
-}
+from deckConsts import DECKS, OUTPUT_DIR
 
 # iterate through all markdown files in directory, ignoring files that begin with _.
 # then, read yaml frontmatter and ignore files that have "imported" set to true.
@@ -23,10 +18,10 @@ def parse_markdown(content, deck_name, tag, media_root):
         e = e.strip()
 
         cloze_id = 1
-        bold_matches = re.findall(r'\*\*(.*?)\*\*', t)
+        bold_matches = re.findall(r"\*\*(.*?)\*\*", t)
         for bold_text in bold_matches:
             cloze_text = bold_text
-            if not re.match(r'^\d+::.*', bold_text):
+            if not re.match(r"^\d+::.*", bold_text):
                 cloze_text = f"{cloze_id}::{bold_text}"
                 cloze_id += 1
             cloze_text = f"{{{{c{cloze_text}}}}}"
@@ -34,17 +29,28 @@ def parse_markdown(content, deck_name, tag, media_root):
             t = t.replace(f"**{bold_text}**", cloze_text)
 
         def general_conversion(s):
-            s = markdown2.markdown(s, extras=["fenced-code-blocks", "tables", "cuddled-lists", "code-friendly",
-                                              "footnotes", "header-ids", "smarty-pants", "target-blank-links"])
+            s = markdown2.markdown(
+                s,
+                extras=[
+                    "fenced-code-blocks",
+                    "tables",
+                    "cuddled-lists",
+                    "code-friendly",
+                    "footnotes",
+                    "header-ids",
+                    "smarty-pants",
+                    "target-blank-links",
+                ],
+            )
 
             s = s.replace("<p>", "").replace("</p>", "")
 
             # process latex
-            ml_latex = re.findall(r'\$\$(.*?)\$\$', s)
+            ml_latex = re.findall(r"\$\$(.*?)\$\$", s)
             for latex in ml_latex:
                 s = s.replace(f"$${latex}$$", f"\\({latex}\\)")
 
-            latex = re.findall(r'\$(.*?)\$', s)
+            latex = re.findall(r"\$(.*?)\$", s)
             for l in latex:
                 s = s.replace(f"${l}$", f"\\({l}\\)")
 
@@ -56,7 +62,7 @@ def parse_markdown(content, deck_name, tag, media_root):
 
                 sha1 = hashlib.sha1()
 
-                with open(path, 'rb') as f:
+                with open(path, "rb") as f:
                     while True:
                         data = f.read(BUFF_SIZE)
                         if not data:
@@ -66,13 +72,15 @@ def parse_markdown(content, deck_name, tag, media_root):
                 return sha1.hexdigest()
 
             for image in images:
-                image_path = os.path.join(media_root, unquote(image).replace("/", os.sep))
+                image_path = os.path.join(
+                    media_root, unquote(image).replace("/", os.sep)
+                )
                 _, ext = os.path.splitext(image_path)
 
                 image_id = hash_file(image_path)
                 filename = f"{image_id}{ext}"
 
-                anki.send_media({"filename": filename, 'path': image_path})
+                anki.send_media({"filename": filename, "path": image_path})
 
                 s = s.replace(image, filename)
 
@@ -88,24 +96,26 @@ def parse_markdown(content, deck_name, tag, media_root):
         # print(f"Creating card with text: {t}")
         # print(f"Creating card with extra: {e}")
 
-        return {'deckName': deck_name,
-                'modelName': "cloze",
-                'fields': {'Text': t, 'Extra': e},
-                'tags': [tag],
-                "options": {
-                    "allowDuplicate": False,
-                    "duplicateScope": deck_name,
-                    "duplicateScopeOptions": {
-                        "deckName": deck_name,
-                        "checkChildren": False,
-                        "checkAllModels": False
-                    }
-                }}
+        return {
+            "deckName": deck_name,
+            "modelName": "cloze",
+            "fields": {"Text": t, "Extra": e},
+            "tags": [tag],
+            "options": {
+                "allowDuplicate": False,
+                "duplicateScope": deck_name,
+                "duplicateScopeOptions": {
+                    "deckName": deck_name,
+                    "checkChildren": False,
+                    "checkAllModels": False,
+                },
+            },
+        }
 
-    content = content.split('\n')
+    content = content.split("\n")
 
-    text = ''
-    extra = ''
+    text = ""
+    extra = ""
 
     all = []
 
@@ -123,8 +133,8 @@ def parse_markdown(content, deck_name, tag, media_root):
         if line == "---":
             if is_building_ml_extra:
                 all.append(create_card(text, extra))
-                text = ''
-                extra = ''
+                text = ""
+                extra = ""
                 append = False
 
             is_building_ml_extra = not is_building_ml_extra
@@ -138,11 +148,11 @@ def parse_markdown(content, deck_name, tag, media_root):
             continue
 
         if append:
-            if text != '':
+            if text != "":
                 all.append(create_card(text, extra))
                 append = False
-            text = ''
-            extra = ''
+            text = ""
+            extra = ""
 
         if is_building_ml_extra or line.startswith("\t") or line.startswith(" "):
             append = False
@@ -153,7 +163,7 @@ def parse_markdown(content, deck_name, tag, media_root):
             text += line
             text += "\n"
 
-    if text != '':
+    if text != "":
         all.append(create_card(text, extra))
 
     return all
@@ -162,14 +172,13 @@ def parse_markdown(content, deck_name, tag, media_root):
 def main():
     # Iterate over the specified deck names and directories
     for deck_name, deck_directory in DECKS.items():
+        print(deck_directory)
         # Process each note file in the current deck directory
         for root, dirs, files in os.walk(deck_directory):
             for file in files:
-
                 all_cards = []
                 # Process only Markdown files and ignore files starting with '_'
                 if not file.startswith("_") and file.endswith(".md"):
-
                     file_path = os.path.join(root, file)
 
                     # read yaml frontmatter and ignore files that have "imported" set to true
@@ -182,7 +191,7 @@ def main():
                             part = content[3:]
                             last_index = part.index("---")
                             yaml_parts = part[0:last_index]
-                            content = part[last_index + 4:]
+                            content = part[last_index + 4 :]
                             front_matter = yaml.safe_load(yaml_parts)
                             if front_matter.get("imported"):
                                 continue
@@ -191,10 +200,14 @@ def main():
                         tag = "#"
                         tag += "::#".join(deck_name.replace(" ", "").split("::"))
 
-                        last_path = file_path.replace(deck_directory, "").replace(".md", "")
+                        last_path = file_path.replace(deck_directory, "").replace(
+                            ".md", ""
+                        )
 
                         tag += "::"
-                        tag += last_path.strip("\\").replace("\\", "::").replace(" ", "")
+                        tag += (
+                            last_path.strip("\\").replace("\\", "::").replace(" ", "")
+                        )
 
                         cards = parse_markdown(content, deck_name, tag, root)
 
@@ -205,16 +218,20 @@ def main():
                         rejected = anki.send_notes(all_cards)
 
                         if rejected:
-                            base_file_name = "output"
+                            base_file_name = "anki-import-error"
                             file_extension = ".txt"
                             counter = 1
 
-                            while os.path.exists(f"{base_file_name}_{counter}{file_extension}"):
+                            while os.path.exists(
+                                f"{base_file_name}_{counter}{file_extension}"
+                            ):
                                 counter += 1
 
                             file_name = f"{base_file_name}_{counter}{file_extension}"
 
-                            with open(file_name, "w") as error_file:
+                            with open(
+                                os.path.join(OUTPUT_DIR, file_name), "w"
+                            ) as error_file:
                                 error_file.write("\n".join(rejected))
 
                             print(f"Output written to {file_name}")
@@ -230,6 +247,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+    print("Complete.")
 
     # with open("test.md", "r", encoding="utf-8") as f:
     #     content = f.read()
