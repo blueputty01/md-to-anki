@@ -206,7 +206,7 @@ def main():
 
                         tag += "::"
                         tag += (
-                            last_path.strip("\\").replace("\\", "::").replace(" ", "")
+                            last_path.strip(os.sep).replace(os.sep, "::").replace(" ", "")
                         )
 
                         cards = parse_markdown(content, deck_name, tag, root)
