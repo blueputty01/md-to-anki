@@ -2,10 +2,10 @@ import hashlib
 import os
 import re
 import markdown2
-import yaml
 import anki
 from urllib.parse import unquote
 from deckConsts import DECKS, OUTPUT_DIR
+
 
 # iterate through all markdown files in directory, ignoring files that begin with _.
 # then, read yaml frontmatter and ignore files that have "imported" set to true.
@@ -181,20 +181,21 @@ def main():
                 if not file.startswith("_") and file.endswith(".md"):
                     file_path = os.path.join(root, file)
 
-                    # read yaml frontmatter and ignore files that have "imported" set to true
-                    front_matter = {}
-
                     with open(file_path, "r", encoding="utf-8") as f:
                         content = f.read()
 
+                        # isolate yaml stuff
                         if content.startswith("---"):
                             part = content[3:]
                             last_index = part.index("---")
-                            yaml_parts = part[0:last_index]
-                            content = part[last_index + 4 :]
-                            front_matter = yaml.safe_load(yaml_parts)
-                            if front_matter.get("imported"):
-                                continue
+                            content = part[last_index + 4:]
+
+                        rstripped_content = content.rstrip("\n ")
+                        if rstripped_content.endswith("***"):
+                            continue
+
+                        imported_parts = content.split("***")
+                        content = imported_parts[-1]
 
                         print(f"Processing {file}")
                         tag = "#"
@@ -213,36 +214,38 @@ def main():
 
                         all_cards.extend(cards)
 
-                    with open(file_path, "w", encoding="utf-8") as f:
-                        # import cards using AnkiConnect api
-                        rejected = anki.send_notes(all_cards)
+                    # import cards using AnkiConnect api
+                    rejected = anki.send_notes(all_cards)
 
-                        if rejected:
-                            base_file_name = "anki-import-error"
-                            file_extension = ".txt"
-                            counter = 1
+                    if rejected:
+                        base_file_name = "anki-import-error"
+                        file_extension = ".txt"
+                        counter = 1
 
-                            while os.path.exists(
+                        while os.path.exists(
                                 f"{base_file_name}_{counter}{file_extension}"
-                            ):
-                                counter += 1
+                        ):
+                            counter += 1
 
-                            file_name = f"{base_file_name}_{counter}{file_extension}"
+                        file_name = f"{base_file_name}_{counter}{file_extension}"
 
-                            with open(
+                        with open(
                                 os.path.join(OUTPUT_DIR, file_name), "w"
-                            ) as error_file:
-                                error_file.write("\n".join(rejected))
+                        ) as error_file:
+                            error_file.write("\n".join(rejected))
 
-                            print(f"Output written to {file_name}")
+                        print(f"Output written to {file_name}")
 
-                        # set "imported" to true in yaml frontmatter
-                        front_matter["imported"] = True
-                        f.seek(0)
-                        f.write("---\n")
-                        f.write(yaml.dump(front_matter))
-                        f.write("---\n")
-                        f.write(content)
+                    with open(file_path, "a", encoding="utf-8") as f:
+                        # count number of new line characters at end of file
+                        counter = 0
+                        while content.endswith("\n"):
+                            content = content[:-1]
+                            counter += 1
+
+                        if counter < 2:
+                            f.write("\n\n")
+                        f.write("***\n")
 
 
 if __name__ == "__main__":

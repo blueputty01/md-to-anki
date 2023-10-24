@@ -17,8 +17,13 @@ Imports Markdown files into Anki (spaced repetition software) to keep memory of 
 
 ### Input text:
 
-All notes are imported with the cloze type. Underlined text are converted to cloze fields. Breaks between notes refer to
-new fields, and indented text refer to text in the extra field. Title text is converted to the tags field.
+All notes are imported with the cloze type. Bold text is converted to cloze fields. 
+
+Breaks between notes refer to new fields.
+
+indented text refer to text in the extra field. Alternatively, an extra field may be surrounded by "---"
+
+Appends at the end of the last imported section.
 
 > The <ins>Articles of Confederation</ins> defined the government that ran the American Revolution.
 >
