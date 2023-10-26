@@ -119,7 +119,10 @@ def parse_markdown(content, deck_name, tag, media_root):
 
     all = []
 
+    # is building multi line extra
     is_building_ml_extra = False
+
+    is_building_code = False
 
     append = False
     for line in iter(content):
@@ -128,6 +131,25 @@ def parse_markdown(content, deck_name, tag, media_root):
 
         if line == "+":
             text += "\n"
+            continue
+
+        if line.startswith("```"):
+            if is_building_ml_extra:
+                extra += line
+                extra += "\n"
+            else:
+                text += line
+                text += "\n"
+            is_building_code = not is_building_code
+            continue
+
+        if is_building_code:
+            if is_building_ml_extra:
+                extra += line
+                extra += "\n"
+            else:
+                text += line
+                text += "\n"
             continue
 
         if line == "---":
@@ -205,10 +227,17 @@ def main():
                             ".md", ""
                         )
 
+                        # remove leading/trailing slashes
+                        tag_path = last_path.strip(os.sep)
+                        # replace slashes with double colons
+                        tag_path = tag_path.replace(os.sep, "::")
+                        # remove spaces
+                        tag_path = tag_path.replace(" ", "")
+                        # replace dashes with sub tag
+                        tag_path = tag_path.replace("-", "::")
+
                         tag += "::"
-                        tag += (
-                            last_path.strip(os.sep).replace(os.sep, "::").replace(" ", "")
-                        )
+                        tag += tag_path
 
                         cards = parse_markdown(content, deck_name, tag, root)
 
@@ -235,6 +264,7 @@ def main():
                             error_file.write("\n".join(rejected))
 
                         print(f"Output written to {file_name}")
+                        continue
 
                     with open(file_path, "a", encoding="utf-8") as f:
                         # count number of new line characters at end of file
@@ -251,8 +281,3 @@ def main():
 if __name__ == "__main__":
     main()
     print("Complete.")
-
-    # with open("test.md", "r", encoding="utf-8") as f:
-    #     content = f.read()
-    #     test = parse_markdown(content, "temp", "#delete", "root")
-    # print(test)
