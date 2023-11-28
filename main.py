@@ -14,9 +14,17 @@ from deckConsts import DECKS, OUTPUT_DIR
 
 def parse_markdown(content, deck_name, tag, media_root):
     def create_card(t, e):
-        t = t.strip()
-        e = e.strip()
+        def pre_process(input_string):
+            input_string = input_string.strip()
+            sub = "}}"
+            while sub in input_string:
+                input_string = input_string.replace(sub, "} }")
+            return input_string
 
+        t = pre_process(t)
+        e = pre_process(e)
+
+        # process clozes
         cloze_id = 1
         bold_matches = re.findall(r"\*\*(.*?)\*\*", t)
         for bold_text in bold_matches:
@@ -28,17 +36,29 @@ def parse_markdown(content, deck_name, tag, media_root):
 
             t = t.replace(f"**{bold_text}**", cloze_text)
 
-        def general_conversion(s):
+        def post_process(s):
             s = markdown2.markdown(
                 s,
                 extras=[
+                    # Allows a code block to not have to be indented by fencing it with '```' on a line before and after
+                    # Based on http://github.github.com/github-flavored-markdown/ with support for syntax highlighting.
                     "fenced-code-blocks",
+                    # tables: Tables using the same format as GFM and PHP-Markdown Extra.
                     "tables",
+                    # cuddled-lists: Allow lists to be cuddled to the preceding paragraph.
                     "cuddled-lists",
+                    # code-friendly: The code-friendly extra disables the use of leading, trailing and
+                    # --most importantly-- intra-word emphasis (<em>) and strong (<strong>)
+                    # using single or double underscores, respectively.
                     "code-friendly",
+                    # footnotes: support footnotes as in use on daringfireball.net and implemented in other
+                    # Markdown processors (tho not in Markdown.pl v1.0.1).
                     "footnotes",
-                    "header-ids",
+                    # smarty-pants: Fancy quote, em-dash and ellipsis handling similar to
+                    # http://daringfireball.net/projects/smartypants/. See old issue 42 for discussion.
                     "smarty-pants",
+                    # target-blank-links: Add target="_blank" to all <a> tags with an href.
+                    # This causes the link to be opened in a new tab upon a click.
                     "target-blank-links",
                 ],
             )
@@ -48,7 +68,8 @@ def parse_markdown(content, deck_name, tag, media_root):
             # process latex
             ml_latex = re.findall(r"\$\$(.*?)\$\$", s)
             for latex in ml_latex:
-                s = s.replace(f"$${latex}$$", f"\\({latex}\\)")
+                latex = latex.replace("}}", "} }")
+                s = s.replace(f"$${latex}$$", f"\\[{latex}\\]")
 
             latex = re.findall(r"\$(.*?)\$", s)
             for l in latex:
@@ -86,8 +107,8 @@ def parse_markdown(content, deck_name, tag, media_root):
 
             return s.strip("\n")
 
-        t = general_conversion(t)
-        e = general_conversion(e)
+        t = post_process(t)
+        e = post_process(e)
 
         new_line = "<br />"
         t = t.replace("\n", new_line).replace(f">{new_line}<", "> <")
@@ -129,7 +150,7 @@ def parse_markdown(content, deck_name, tag, media_root):
         # only strip on right to prevent stripping of indent/extra indicator
         line = line.rstrip()
 
-        if line == "+":
+        if line.lstrip() == "+":
             text += "\n"
             continue
 
