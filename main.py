@@ -267,6 +267,10 @@ def main():
                     # import cards using AnkiConnect api
                     rejected = anki.send_notes(all_cards)
 
+                    if rejected is None:
+                        # anki connect is not running
+                        return None
+
                     if rejected:
                         base_file_name = "anki-import-error"
                         file_extension = ".txt"

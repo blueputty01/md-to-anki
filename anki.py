@@ -36,12 +36,17 @@ def invoke(action, **params):
         return response["result"]
     else:
         print("Port is closed")
-        return
+        return None
 
 
 def send_notes(notes):
     print("Sending notes")
     result = invoke("addNotes", notes=notes)
+
+    if result is None:
+        print("AnkiConnect is not running. Please start Anki and try again.")
+        return None
+
     rejected = []
 
     total = len(notes)
