@@ -4,7 +4,7 @@ Imports Markdown files into Anki (spaced repetition software) to keep memory of 
 
 # How to use 🤔
 
-1. Run the code with modifications based on the markdown file location.
+1. Run `main.py` using one of the runner files based on your operating system, with modifications based on the markdown file location.
 
 ## Features ⚒️
 
