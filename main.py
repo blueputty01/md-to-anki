@@ -25,14 +25,21 @@ def parse_markdown(content, deck_name, tag, media_root):
         e = pre_process(e)
 
         # process clozes
-        cloze_id = 1
+        unique_cloze = False;
+        cloze_id = 2
         bold_matches = re.findall(r"\*\*(.*?)\*\*", t)
         for bold_text in bold_matches:
             cloze_text = bold_text
+            if(bold_text.starts_with("|")):
+                unique_cloze = True
+                bold_text = bold_text[1:]
             if not re.match(r"^\d+::.*", bold_text):
                 cloze_text = f"{cloze_id}::{bold_text}"
                 cloze_id += 1
-            cloze_text = f"{{{{c{cloze_text}}}}}"
+            if(unique_cloze):
+                cloze_text = f"{{{{c1::{{c{cloze_text}}}}}}}"
+            else:
+                cloze_text = f"{{{{c{cloze_text}}}}}"
 
             t = t.replace(f"**{bold_text}**", cloze_text)
 
@@ -221,86 +228,88 @@ def main():
             for file in files:
                 all_cards = []
                 # Process only Markdown files and ignore files starting with '_'
-                if not file.startswith("_") and file.endswith(".md"):
-                    file_path = os.path.join(root, file)
+                if file.startswith("_") or file.endswith(".md"):
+                    continue
+                    
+                file_path = os.path.join(root, file)
 
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        content = f.read()
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
 
-                        # isolate yaml stuff
-                        if content.startswith("---"):
-                            part = content[3:]
-                            last_index = part.index("---")
-                            content = part[last_index + 4:]
+                    # isolate yaml stuff
+                    if content.startswith("---"):
+                        part = content[3:]
+                        last_index = part.index("---")
+                        content = part[last_index + 4:]
 
-                        rstripped_content = content.rstrip("\n ")
-                        if rstripped_content.endswith("***"):
-                            continue
-
-                        imported_parts = content.split("***")
-                        content = imported_parts[-1]
-
-                        print(f"Processing {file}")
-                        tag = "#"
-                        tag += "::#".join(deck_name.replace(" ", "").split("::"))
-
-                        last_path = file_path.replace(deck_directory, "").replace(
-                            ".md", ""
-                        )
-
-                        # remove leading/trailing slashes
-                        tag_path = last_path.strip(os.sep)
-                        # replace slashes with double colons
-                        tag_path = tag_path.replace(os.sep, "::")
-                        # remove spaces
-                        tag_path = tag_path.replace(" ", "")
-                        # replace dashes with sub tag
-                        tag_path = tag_path.replace("-", "::")
-
-                        tag += "::"
-                        tag += tag_path
-
-                        cards = parse_markdown(content, deck_name, tag, root)
-
-                        all_cards.extend(cards)
-
-                    # import cards using AnkiConnect api
-                    rejected = anki.send_notes(all_cards)
-
-                    if rejected is None:
-                        # anki connect is not running
-                        return None
-
-                    if rejected:
-                        base_file_name = "anki-import-error"
-                        file_extension = ".txt"
-                        counter = 1
-
-                        while os.path.exists(
-                                f"{base_file_name}_{counter}{file_extension}"
-                        ):
-                            counter += 1
-
-                        file_name = f"{base_file_name}_{counter}{file_extension}"
-
-                        with open(
-                                os.path.join(OUTPUT_DIR, file_name), "w"
-                        ) as error_file:
-                            error_file.write("\n".join(rejected))
-
-                        print(f"Output written to {file_name}")
+                    rstripped_content = content.rstrip("\n ")
+                    if rstripped_content.endswith("***"):
                         continue
 
-                    with open(file_path, "a", encoding="utf-8") as f:
-                        # count number of new line characters at end of file
-                        counter = 0
-                        while content.endswith("\n"):
-                            content = content[:-1]
-                            counter += 1
+                    imported_parts = content.split("***")
+                    content = imported_parts[-1]
 
-                        if counter < 2:
-                            f.write("\n\n")
-                        f.write("***\n")
+                    print(f"Processing {file}")
+                    tag = "#"
+                    tag += "::#".join(deck_name.replace(" ", "").split("::"))
+
+                    last_path = file_path.replace(deck_directory, "").replace(
+                        ".md", ""
+                    )
+
+                    # remove leading/trailing slashes
+                    tag_path = last_path.strip(os.sep)
+                    # replace slashes with double colons
+                    tag_path = tag_path.replace(os.sep, "::")
+                    # remove spaces
+                    tag_path = tag_path.replace(" ", "")
+                    # replace dashes with sub tag
+                    tag_path = tag_path.replace("-", "::")
+
+                    tag += "::"
+                    tag += tag_path
+
+                    cards = parse_markdown(content, deck_name, tag, root)
+
+                    all_cards.extend(cards)
+
+                # import cards using AnkiConnect api
+                rejected = anki.send_notes(all_cards)
+
+                if rejected is None:
+                    # anki connect is not running
+                    return None
+
+                if rejected:
+                    base_file_name = "anki-import-error"
+                    file_extension = ".txt"
+                    counter = 1
+
+                    while os.path.exists(
+                            f"{base_file_name}_{counter}{file_extension}"
+                    ):
+                        counter += 1
+
+                    file_name = f"{base_file_name}_{counter}{file_extension}"
+
+                    with open(
+                            os.path.join(OUTPUT_DIR, file_name), "w"
+                    ) as error_file:
+                        error_file.write("\n".join(rejected))
+
+                    print(f"Output written to {file_name}")
+                    continue
+
+                with open(file_path, "a", encoding="utf-8") as f:
+                    # count number of new line characters at end of file
+                    counter = 0
+                    while content.endswith("\n"):
+                        content = content[:-1]
+                        counter += 1
+
+                    if counter < 2:
+                        f.write("\n\n")
+                    f.write("***\n")
 
 
 if __name__ == "__main__":
