@@ -25,22 +25,14 @@ def parse_markdown(content, deck_name, tag, media_root):
         e = pre_process(e)
 
         # process clozes
-        unique_cloze = False
         cloze_id = 1
         bold_matches = re.findall(r"\*\*(.*?)\*\*", t)
-        max_cloze_id = 1 + len(bold_matches);
         for bold_text in bold_matches:
             cloze_text = bold_text
-            if(bold_text.startswith("|")):
-                unique_cloze = True
-                bold_text = bold_text[1:]
             if not re.match(r"^\d+::.*", bold_text):
                 cloze_text = f"{cloze_id}::{bold_text}"
                 cloze_id += 1
-            if(unique_cloze):
-                cloze_text = f"{{{{c{max_cloze_id}::{{c{cloze_text}}}}}}}"
-            else:
-                cloze_text = f"{{{{c{cloze_text}}}}}"
+            cloze_text = f"{{{{c{cloze_text}}}}}"
 
             t = t.replace(f"**{bold_text}**", cloze_text)
 
