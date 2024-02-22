@@ -4,7 +4,7 @@ import re
 import markdown2
 import anki
 from urllib.parse import unquote
-from deckConsts import DECKS, OUTPUT_DIR
+from deckConsts import DECKS, OUTPUT_DIR, IGNORE_KEYWORDS
 
 
 # iterate through all markdown files in directory, ignoring files that begin with _.
@@ -152,6 +152,7 @@ def parse_markdown(content, deck_name, tag, media_root):
 
         if line.lstrip() == "+":
             text += "\n"
+            text += "\n"
             continue
 
         if line.startswith("```"):
@@ -219,6 +220,10 @@ def main():
         # Process each note file in the current deck directory
         for root, dirs, files in os.walk(deck_directory):
             for file in files:
+                if root.split(os.sep)[-1].startswith(IGNORE_KEYWORDS):
+                    print(f"Skipping {file}")
+                    continue
+
                 all_cards = []
                 # Process only Markdown files and ignore files starting with '_'
                 if not file.startswith("_") and file.endswith(".md"):

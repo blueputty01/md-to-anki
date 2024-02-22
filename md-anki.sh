@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Change the directory to D:
 cd /Users/alexyang/Documents/School/anki/md-to-anki/
 
