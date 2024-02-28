@@ -16,9 +16,6 @@ def parse_markdown(content, deck_name, tag, media_root):
     def create_card(t, e):
         def pre_process(input_string):
             input_string = input_string.strip()
-            sub = "}}"
-            while sub in input_string:
-                input_string = input_string.replace(sub, "} }")
             return input_string
 
         t = pre_process(t)
@@ -66,14 +63,17 @@ def parse_markdown(content, deck_name, tag, media_root):
             s = s.replace("<p>", "").replace("</p>", "")
 
             # process latex
+            # multi-line
             ml_latex = re.findall(r"\$\$(.*?)\$\$", s)
             for latex in ml_latex:
                 latex = latex.replace("}}", "} }")
                 s = s.replace(f"$${latex}$$", f"\\[{latex}\\]")
 
-            latex = re.findall(r"\$(.*?)\$", s)
-            for l in latex:
-                s = s.replace(f"${l}$", f"\\({l}\\)")
+            # single line
+            sl_latex = re.findall(r"\$(.*?)\$", s)
+            for latex in sl_latex:
+                latex = latex.replace("}}", "} }")
+                s = s.replace(f"${latex}$", f"\\({latex}\\)")
 
             # process images
             images = re.findall(r'<img src="(.*?)"', s)
