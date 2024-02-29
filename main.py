@@ -33,9 +33,9 @@ def parse_markdown(content, deck_name, tag, media_root):
 
             t = t.replace(f"**{bold_text}**", cloze_text)
 
-        def post_process(s):
+        def post_process(raw_string):
             s = markdown2.markdown(
-                s,
+                raw_string,
                 extras=[
                     # Allows a code block to not have to be indented by fencing it with '```' on a line before and after
                     # Based on http://github.github.com/github-flavored-markdown/ with support for syntax highlighting.
