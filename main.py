@@ -279,7 +279,7 @@ def main():
                     counter = 1
 
                     while os.path.exists(
-                            f"{base_file_name}_{counter}{file_extension}"
+                            os.path.join(OUTPUT_DIR, f"{base_file_name}_{counter}{file_extension}")
                     ):
                         counter += 1
 
