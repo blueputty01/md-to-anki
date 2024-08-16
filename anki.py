@@ -39,12 +39,11 @@ def invoke(action, **params):
         return None
 
 
-def send_notes(notes):
-    print("Sending notes")
+def send_notes(console, notes):
     result = invoke("addNotes", notes=notes)
 
     if result is None:
-        print("AnkiConnect is not running. Please start Anki and try again.")
+        console.print("AnkiConnect is not running. Please start Anki and try again.")
         return None
 
     rejected = []
@@ -55,13 +54,13 @@ def send_notes(notes):
             rejected.append(f'{note["fields"]} under {note["deckName"]}')
 
     rej_count = len(rejected)
-    print(f"{total - rej_count} / {total} notes were successfully added to Anki.")
+    color = "red" if rej_count > 0 else "green"
+    console.print(f"[{color}]{total - rej_count} / {total}[/{color}] notes were successfully added to Anki.")
     if rej_count > 0:
-        print("The following notes were rejected by Anki:")
-        print(*rejected, sep="\n")
+        console.print("The following notes were rejected by Anki:")
+        console.print(*rejected, sep="\n")
         return rejected
     return []
-    # print("Action complete")
 
 
 def send_media(media):
