@@ -348,7 +348,8 @@ def main():
                     progress.advance(task)
                     continue
 
-                with open(file_path, "a", encoding="utf-8") as f:
+                with open(file_path, "a+", encoding="utf-8") as f:
+                    content = f.read()
                     # count number of new line characters at end of file
                     counter = 0
                     while content.endswith("\n"):
