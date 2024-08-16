@@ -287,20 +287,24 @@ def main():
     logging.basicConfig(level="NOTSET", handlers=[RichHandler(console=console, level="NOTSET")])
     logger = logging.getLogger('rich')
 
-    status = console.status("Initializing")
-    progress = Progress(console=console, transient=True) 
+    # status = console.status("Initializing")
+    with Progress(console=console, transient=True) as progress:
+    # with Live(Group( progress, status)):
+        task = None
 
-    with Live(Group( status, progress)):
         # iterate over the specified deck names and directories
         for deck_name, deck_directory in DECKS.items():
-            # logger.info(f"\nPROCESSING {deck_directory} -> {deck_name}")
+            if task is not None:
+                progress.remove_task(task)
+
+            # console.print(f" --- [blue]{deck_name}[/blue] --- ")
 
             root, _, files = next(os.walk(deck_directory))
             task = progress.add_task(f"[green][bold]{deck_name}", total=len(files))
 
             # Process each note file in the current deck directory
             for file in files:
-                status.update(f"Parsing {file}")
+                # status.update(f"{file} -- Parsing")
 
                 all_cards = []
                 rejected = []
@@ -311,18 +315,23 @@ def main():
                     
                 file_path = os.path.join(root, file)
                 try:
-                    status.update("Processing file contents")
+                    # status.update(f"{file} -- Processing file contents")
                     all_cards = process_file(root, deck_name, deck_directory, file_path)
 
-                    # import cards using AnkiConnect api
-                    status.update("Sending")
-                    rejected = anki.send_notes(progress, all_cards)
+                    if len(all_cards) == 0:
+                        progress.advance(task)
+                        continue
 
-                    status.update("Sent!")
+                    # import cards using AnkiConnect api
+                    # status.update(f"{file} -- Sending")
+                    console.print(f"[bold]{file}[/bold]")
+                    rejected = anki.send_notes(console, all_cards)
+
+                    # status.update(f"{file} -- Sent!")
                 except Exception:
                     progress.console.print_exception(show_locals=True)
 
-                status.stop()
+                # status.stop()
                 if rejected is None:
                     # anki connect is not running
                     return None
