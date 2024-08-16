@@ -5,12 +5,12 @@ import markdown2
 import anki
 import logging
 from urllib.parse import unquote
-from deckConsts import DECKS, OUTPUT_DIR
 from rich import print
 from rich.console import Console, Group
 from rich.live import Live
 from rich.logging import RichHandler
 from rich.progress import Progress
+from deckConsts import DECKS, OUTPUT_DIR, IGNORE_KEYWORDS
 
 
 # from pygments import highlight
@@ -183,6 +183,7 @@ def parse_markdown(content, deck_name, tag, media_root):
 
         if line.lstrip() == "+":
             text += "\n"
+            text += "\n"
             continue
 
         if line.startswith("```"):
@@ -309,7 +310,7 @@ def main():
                 all_cards = []
                 rejected = []
                 # Process only Markdown files and ignore files starting with '_'
-                if file.startswith("_") or not file.endswith(".md"):
+                if root.split(os.sep)[-1].startswith(IGNORE_KEYWORDS) or file.startswith("_") or not file.endswith(".md"):
                     progress.advance(task)
                     continue
                     
