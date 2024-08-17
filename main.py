@@ -243,7 +243,7 @@ def parse_markdown(content, deck_name, tag, media_root):
 
     return all
 
-def process_file(root, deck_name, deck_directory, file_path):
+def get_content(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
 
@@ -254,32 +254,40 @@ def process_file(root, deck_name, deck_directory, file_path):
             content = part[last_index + 3:]
 
         if content.rstrip("\n ").endswith("***"):
-            return []
+            return ""
 
         if "***" in content:
             imported_parts = content.split("***")
             content = imported_parts[-2]
+        
+        return content
 
-        tag = "#"
-        tag += "::#".join(deck_name.replace(" ", "").split("::"))
+def process_file(root, deck_name, deck_directory, file_path):
+    content = get_content(file_path)
 
-        last_path = file_path.replace(deck_directory, "").replace(
-            ".md", ""
-        )
+    if content == "":
+        return []
 
-        # remove leading/trailing slashes
-        tag_path = last_path.strip(os.sep)
-        # replace slashes with double colons
-        tag_path = tag_path.replace(os.sep, "::")
-        # remove spaces
-        tag_path = tag_path.replace(" ", "")
-        # replace dashes with sub tag
-        tag_path = tag_path.replace("-", "::")
+    tag = "#"
+    tag += "::#".join(deck_name.replace(" ", "").split("::"))
 
-        tag += "::"
-        tag += tag_path
+    last_path = file_path.replace(deck_directory, "").replace(
+        ".md", ""
+    )
 
-        return parse_markdown(content, deck_name, tag, root)
+    # remove leading/trailing slashes
+    tag_path = last_path.strip(os.sep)
+    # replace slashes with double colons
+    tag_path = tag_path.replace(os.sep, "::")
+    # remove spaces
+    tag_path = tag_path.replace(" ", "")
+    # replace dashes with sub tag
+    tag_path = tag_path.replace("-", "::")
+
+    tag += "::"
+    tag += tag_path
+
+    return parse_markdown(content, deck_name, tag, root)
 
  
 def main():
@@ -309,6 +317,7 @@ def main():
 
                 all_cards = []
                 rejected = []
+
                 # Process only Markdown files and ignore files starting with '_'
                 if root.split(os.sep)[-1].startswith(IGNORE_KEYWORDS) or file.startswith("_") or not file.endswith(".md"):
                     progress.advance(task)
@@ -317,18 +326,35 @@ def main():
                 file_path = os.path.join(root, file)
                 try:
                     # status.update(f"{file} -- Processing file contents")
+
+                    # Process file md content 
                     all_cards = process_file(root, deck_name, deck_directory, file_path)
 
+                    # No useful (unprocessed) md content
                     if len(all_cards) == 0:
                         progress.advance(task)
                         continue
 
-                    # import cards using AnkiConnect api
+                    # Import cards using AnkiConnect api
                     # status.update(f"{file} -- Sending")
                     console.print(f"[bold]{file}[/bold]")
                     rejected = anki.send_notes(console, all_cards)
 
                     # status.update(f"{file} -- Sent!")
+
+                    # Write processed marker
+                    with open(file_path, "a", encoding="utf-8") as f:
+                        content = get_content(file_path)
+
+                        # count number of new line characters at end of file
+                        counter = 0
+                        while content.endswith("\n"):
+                            content = content[:-1]
+                            counter += 1
+
+                        if counter < 2:
+                            f.write("\n\n")
+                        f.write("***\n")
                 except Exception:
                     progress.console.print_exception(show_locals=True)
 
@@ -358,17 +384,6 @@ def main():
                     progress.advance(task)
                     continue
 
-                with open(file_path, "a+", encoding="utf-8") as f:
-                    content = f.read()
-                    # count number of new line characters at end of file
-                    counter = 0
-                    while content.endswith("\n"):
-                        content = content[:-1]
-                        counter += 1
-
-                    if counter < 2:
-                        f.write("\n\n")
-                    f.write("***\n")
                 
                 progress.advance(task)
 
