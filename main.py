@@ -5,7 +5,7 @@ import markdown2
 import anki
 import logging
 from urllib.parse import unquote
-from deckConsts import DECKS, OUTPUT_DIR
+from deckConsts import DECKS, OUTPUT_DIR, IGNORE_KEYWORDS
 from rich import print
 from rich.console import Console, Group
 from rich.live import Live
@@ -34,9 +34,6 @@ def parse_markdown(content, deck_name, tag, media_root):
     def create_card(t, e):
         def pre_process(input_string):
             input_string = input_string.strip()
-            sub = "}}"
-            while sub in input_string:
-                input_string = input_string.replace(sub, "} }")
             return input_string
 
         t = pre_process(t)
@@ -54,9 +51,9 @@ def parse_markdown(content, deck_name, tag, media_root):
 
             t = t.replace(f"**{bold_text}**", cloze_text)
 
-        def post_process(s):
+        def post_process(raw_string):
             s = markdown2.markdown(
-                s,
+                raw_string,
                 extras=[
                     # Allows a code block to not have to be indented by fencing it with '```' on a line before and after
                     # Based on http://github.github.com/github-flavored-markdown/ with support for syntax highlighting.
@@ -97,14 +94,17 @@ def parse_markdown(content, deck_name, tag, media_root):
 
             
             # process latex
+            # multi-line
             ml_latex = re.findall(r"\$\$(.*?)\$\$", s)
             for latex in ml_latex:
                 latex = latex.replace("}}", "} }")
                 s = s.replace(f"$${latex}$$", f"\\[{latex}\\]")
 
-            latex = re.findall(r"\$(.*?)\$", s)
-            for l in latex:
-                s = s.replace(f"${l}$", f"\\({l}\\)")
+            # single line
+            sl_latex = re.findall(r"\$(.*?)\$", s)
+            for latex in sl_latex:
+                latex = latex.replace("}}", "} }")
+                s = s.replace(f"${latex}$", f"\\({latex}\\)")
 
             # process images
             images = re.findall(r'<img src="(.*?)"', s)
@@ -182,6 +182,7 @@ def parse_markdown(content, deck_name, tag, media_root):
         line = line.rstrip()
 
         if line.lstrip() == "+":
+            text += "\n"
             text += "\n"
             continue
 
