@@ -3,9 +3,27 @@ import os
 import re
 import markdown2
 import anki
+import logging
 from urllib.parse import unquote
 from deckConsts import DECKS, OUTPUT_DIR, IGNORE_KEYWORDS
+from rich import print
+from rich.console import Console, Group
+from rich.live import Live
+from rich.logging import RichHandler
+from rich.progress import Progress
 
+
+# from pygments import highlight
+# from pygments.lexers import get_lexer_by_name
+# from pygments.formatters import HtmlFormatter
+
+# md_langname_to_pygments_lexer = {
+#     "cs" : "csharp",
+#     "java" : "java",
+#     "js" : "javascript",
+#     "py" : "python",
+#     "python" : "python"
+# }
 
 # iterate through all markdown files in directory, ignoring files that begin with _.
 # then, read yaml frontmatter and ignore files that have "imported" set to true.
@@ -39,7 +57,7 @@ def parse_markdown(content, deck_name, tag, media_root):
                 extras=[
                     # Allows a code block to not have to be indented by fencing it with '```' on a line before and after
                     # Based on http://github.github.com/github-flavored-markdown/ with support for syntax highlighting.
-                    "fenced-code-blocks",
+                    # "fenced-code-blocks",
                     # tables: Tables using the same format as GFM and PHP-Markdown Extra.
                     "tables",
                     # cuddled-lists: Allow lists to be cuddled to the preceding paragraph.
@@ -61,6 +79,18 @@ def parse_markdown(content, deck_name, tag, media_root):
             )
 
             s = s.replace("<p>", "").replace("</p>", "")
+
+            # # process code
+            # ml_code = re.findall(r"\`\`\`(.*?)\`\`\`", s)
+            # for code in ml_code:
+            #     lang = ""
+            #     if md_langname_to_pygments_lexer.contains_key(ml_code.split(' ')[0]):
+            #         lang = md_langname_to_pygments_lexer[ml_code.split(' ')[0]]
+
+            #     print("lang: " + lang);
+            #     lexer = get_lexer_by_name(lang, stripall=True)
+            #     formatter = HtmlFormatter(linenos=False, noclasses=True)
+            #     print(highlight(code, lexer, formatter));
 
             # process latex
             # multi-line
@@ -213,99 +243,139 @@ def parse_markdown(content, deck_name, tag, media_root):
     return all
 
 
+def process_file(root, deck_name, deck_directory, file_path):
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+        # isolate yaml stuff
+        if content.startswith("---"):
+            part = content[2:]
+            last_index = part.index("---")
+            content = part[last_index + 3 :]
+
+        if content.rstrip("\n ").endswith("***"):
+            return []
+
+        if "***" in content:
+            imported_parts = content.split("***")
+            content = imported_parts[-2]
+
+        tag = "#"
+        tag += "::#".join(deck_name.replace(" ", "").split("::"))
+
+        last_path = file_path.replace(deck_directory, "").replace(".md", "")
+
+        # remove leading/trailing slashes
+        tag_path = last_path.strip(os.sep)
+        # replace slashes with double colons
+        tag_path = tag_path.replace(os.sep, "::")
+        # remove spaces
+        tag_path = tag_path.replace(" ", "")
+        # replace dashes with sub tag
+        tag_path = tag_path.replace("-", "::")
+
+        tag += "::"
+        tag += tag_path
+
+        return parse_markdown(content, deck_name, tag, root)
+
+
 def main():
-    # Iterate over the specified deck names and directories
-    for deck_name, deck_directory in DECKS.items():
-        print(deck_directory)
-        # Process each note file in the current deck directory
-        for root, dirs, files in os.walk(deck_directory):
+    console = Console()
+
+    logging.basicConfig(
+        level="NOTSET", handlers=[RichHandler(console=console, level="NOTSET")]
+    )
+    logger = logging.getLogger("rich")
+
+    # status = console.status("Initializing")
+    with Progress(console=console, transient=True) as progress:
+        # with Live(Group( progress, status)):
+        task = None
+
+        # iterate over the specified deck names and directories
+        for deck_name, deck_directory in DECKS.items():
+            if task is not None:
+                progress.remove_task(task)
+
+            console.print(f" --- [blue]{deck_name}[/blue] --- ")
+
+            try:
+                root, _, files = next(os.walk(deck_directory))
+            except StopIteration:
+                logger.exception("Directory %s does not exist.", deck_directory)
+                continue
+
+            task = progress.add_task(f"[green][bold]{deck_name}", total=len(files))
+
+            # Process each note file in the current deck directory
             for file in files:
-                if root.split(os.sep)[-1].startswith(IGNORE_KEYWORDS):
-                    print(f"Skipping {file}")
-                    continue
+                # status.update(f"{file} -- Parsing")
 
                 all_cards = []
+                rejected = []
                 # Process only Markdown files and ignore files starting with '_'
-                if not file.startswith("_") and file.endswith(".md"):
-                    file_path = os.path.join(root, file)
+                if file.startswith("_") or not file.endswith(".md"):
+                    progress.advance(task)
+                    continue
 
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        content = f.read()
+                file_path = os.path.join(root, file)
+                try:
+                    # status.update(f"{file} -- Processing file contents")
+                    all_cards = process_file(root, deck_name, deck_directory, file_path)
 
-                        # isolate yaml stuff
-                        if content.startswith("---"):
-                            part = content[3:]
-                            last_index = part.index("---")
-                            content = part[last_index + 4:]
-
-                        rstripped_content = content.rstrip("\n ")
-                        if rstripped_content.endswith("***"):
-                            continue
-
-                        imported_parts = content.split("***")
-                        content = imported_parts[-1]
-
-                        print(f"Processing {file}")
-                        tag = "#"
-                        tag += "::#".join(deck_name.replace(" ", "").split("::"))
-
-                        last_path = file_path.replace(deck_directory, "").replace(
-                            ".md", ""
-                        )
-
-                        # remove leading/trailing slashes
-                        tag_path = last_path.strip(os.sep)
-                        # replace slashes with double colons
-                        tag_path = tag_path.replace(os.sep, "::")
-                        # remove spaces
-                        tag_path = tag_path.replace(" ", "")
-                        # replace dashes with sub tag
-                        tag_path = tag_path.replace("-", "::")
-
-                        tag += "::"
-                        tag += tag_path
-
-                        cards = parse_markdown(content, deck_name, tag, root)
-
-                        all_cards.extend(cards)
-
-                    # import cards using AnkiConnect api
-                    rejected = anki.send_notes(all_cards)
-
-                    if rejected is None:
-                        # anki connect is not running
-                        return None
-
-                    if rejected:
-                        base_file_name = "anki-import-error"
-                        file_extension = ".txt"
-                        counter = 1
-
-                        while os.path.exists(
-                                f"{base_file_name}_{counter}{file_extension}"
-                        ):
-                            counter += 1
-
-                        file_name = f"{base_file_name}_{counter}{file_extension}"
-
-                        with open(
-                                os.path.join(OUTPUT_DIR, file_name), "w"
-                        ) as error_file:
-                            error_file.write("\n".join(rejected))
-
-                        print(f"Output written to {file_name}")
+                    if len(all_cards) == 0:
+                        progress.advance(task)
                         continue
 
-                    with open(file_path, "a", encoding="utf-8") as f:
-                        # count number of new line characters at end of file
-                        counter = 0
-                        while content.endswith("\n"):
-                            content = content[:-1]
-                            counter += 1
+                    # import cards using AnkiConnect api
+                    # status.update(f"{file} -- Sending")
+                    console.print(f"[bold]{file}[/bold]")
+                    rejected = anki.send_notes(console, all_cards)
 
-                        if counter < 2:
-                            f.write("\n\n")
-                        f.write("***\n")
+                    # status.update(f"{file} -- Sent!")
+                except Exception:
+                    progress.console.print_exception(show_locals=True)
+
+                # status.stop()
+                if rejected is None:
+                    # anki connect is not running
+                    return None
+
+                if rejected:
+                    base_file_name = "anki-import-error"
+                    file_extension = ".txt"
+                    counter = 1
+
+                    while os.path.exists(
+                        os.path.join(
+                            OUTPUT_DIR, f"{base_file_name}_{counter}{file_extension}"
+                        )
+                    ):
+                        counter += 1
+
+                    file_name = f"{base_file_name}_{counter}{file_extension}"
+
+                    with open(os.path.join(OUTPUT_DIR, file_name), "w", encoding="utf-8") as error_file:
+                        error_file.write("\n".join(rejected))
+
+                    print(f"Output written to {file_name}")
+                    progress.advance(task)
+                    continue
+
+                with open(file_path, "a+", encoding="utf-8") as f:
+                    content = f.read()
+                    # count number of new line characters at end of file
+                    counter = 0
+                    while content.endswith("\n"):
+                        content = content[:-1]
+                        counter += 1
+
+                    if counter < 2:
+                        f.write("\n\n")
+                    f.write("***\n")
+
+                progress.advance(task)
 
 
 if __name__ == "__main__":
