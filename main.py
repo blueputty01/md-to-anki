@@ -349,9 +349,7 @@ def main():
 
                     file_name = f"{base_file_name}_{counter}{file_extension}"
 
-                    with open(
-                            os.path.join(OUTPUT_DIR, file_name), "w"
-                    ) as error_file:
+                    with open(os.path.join(OUTPUT_DIR, file_name), "w", encoding="utf-8") as error_file:
                         error_file.write("\n".join(rejected))
 
                     print(f"Output written to {file_name}")
