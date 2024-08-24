@@ -5,10 +5,8 @@ import markdown2
 import anki
 import logging
 from urllib.parse import unquote
-from deckConsts import DECKS, OUTPUT_DIR, IGNORE_KEYWORDS
-from rich import print
-from rich.console import Console, Group
-from rich.live import Live
+from deckConsts import DECKS, OUTPUT_DIR
+from rich.console import Console
 from rich.logging import RichHandler
 from rich.progress import Progress
 
