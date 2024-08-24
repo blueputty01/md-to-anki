@@ -57,7 +57,7 @@ def parse_markdown(content, deck_name, tag, media_root):
                 extras=[
                     # Allows a code block to not have to be indented by fencing it with '```' on a line before and after
                     # Based on http://github.github.com/github-flavored-markdown/ with support for syntax highlighting.
-                    #"fenced-code-blocks",
+                    # "fenced-code-blocks",
                     # tables: Tables using the same format as GFM and PHP-Markdown Extra.
                     "tables",
                     # cuddled-lists: Allow lists to be cuddled to the preceding paragraph.
@@ -92,7 +92,6 @@ def parse_markdown(content, deck_name, tag, media_root):
             #     formatter = HtmlFormatter(linenos=False, noclasses=True)
             #     print(highlight(code, lexer, formatter));
 
-            
             # process latex
             # multi-line
             ml_latex = re.findall(r"\$\$(.*?)\$\$", s)
@@ -243,6 +242,7 @@ def parse_markdown(content, deck_name, tag, media_root):
 
     return all
 
+
 def process_file(root, deck_name, deck_directory, file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
@@ -251,7 +251,7 @@ def process_file(root, deck_name, deck_directory, file_path):
         if content.startswith("---"):
             part = content[2:]
             last_index = part.index("---")
-            content = part[last_index + 3:]
+            content = part[last_index + 3 :]
 
         if content.rstrip("\n ").endswith("***"):
             return []
@@ -263,9 +263,7 @@ def process_file(root, deck_name, deck_directory, file_path):
         tag = "#"
         tag += "::#".join(deck_name.replace(" ", "").split("::"))
 
-        last_path = file_path.replace(deck_directory, "").replace(
-            ".md", ""
-        )
+        last_path = file_path.replace(deck_directory, "").replace(".md", "")
 
         # remove leading/trailing slashes
         tag_path = last_path.strip(os.sep)
@@ -281,16 +279,18 @@ def process_file(root, deck_name, deck_directory, file_path):
 
         return parse_markdown(content, deck_name, tag, root)
 
- 
-def main():
-    console=Console()
 
-    logging.basicConfig(level="NOTSET", handlers=[RichHandler(console=console, level="NOTSET")])
-    logger = logging.getLogger('rich')
+def main():
+    console = Console()
+
+    logging.basicConfig(
+        level="NOTSET", handlers=[RichHandler(console=console, level="NOTSET")]
+    )
+    logger = logging.getLogger("rich")
 
     # status = console.status("Initializing")
     with Progress(console=console, transient=True) as progress:
-    # with Live(Group( progress, status)):
+        # with Live(Group( progress, status)):
         task = None
 
         # iterate over the specified deck names and directories
@@ -298,9 +298,14 @@ def main():
             if task is not None:
                 progress.remove_task(task)
 
-            # console.print(f" --- [blue]{deck_name}[/blue] --- ")
+            console.print(f" --- [blue]{deck_name}[/blue] --- ")
 
-            root, _, files = next(os.walk(deck_directory))
+            try:
+                root, _, files = next(os.walk(deck_directory))
+            except StopIteration:
+                logger.exception("Directory %s does not exist.", deck_directory)
+                continue
+
             task = progress.add_task(f"[green][bold]{deck_name}", total=len(files))
 
             # Process each note file in the current deck directory
@@ -313,7 +318,7 @@ def main():
                 if file.startswith("_") or not file.endswith(".md"):
                     progress.advance(task)
                     continue
-                    
+
                 file_path = os.path.join(root, file)
                 try:
                     # status.update(f"{file} -- Processing file contents")
@@ -343,7 +348,9 @@ def main():
                     counter = 1
 
                     while os.path.exists(
-                            os.path.join(OUTPUT_DIR, f"{base_file_name}_{counter}{file_extension}")
+                        os.path.join(
+                            OUTPUT_DIR, f"{base_file_name}_{counter}{file_extension}"
+                        )
                     ):
                         counter += 1
 
@@ -367,7 +374,7 @@ def main():
                     if counter < 2:
                         f.write("\n\n")
                     f.write("***\n")
-                
+
                 progress.advance(task)
 
 
