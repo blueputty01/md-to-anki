@@ -1,4 +1,4 @@
-# Google Doc to Anki 📄
+# Markdown to Anki 📄
 
 Imports Markdown files into Anki (spaced repetition software) to keep memory of notes fresh.
 
