@@ -5,8 +5,7 @@ DECKS = {
     "cs::cmsc330": "@2.1/cmsc330",
     "math::math241": "@2.1/math241",
     "math::stat401": "@2.1/stat401",
-    "cs::web": "4 long-term/tech/@web",
-    "cs::utils": "3 long-term/tech/@utils",
+    "cs::web": "4 long-term/tech/documentation/@web",
 }
 
 IGNORE_KEYWORDS = "discussion"
