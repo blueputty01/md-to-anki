@@ -256,7 +256,8 @@ def process_file(root, deck_name, deck_directory, file_path):
 
         if "***" in content:
             imported_parts = content.split("***")
-            content = imported_parts[-2]
+            content = imported_parts[-1]
+
 
         tag = "#"
         tag += "::#".join(deck_name.replace(" ", "").split("::"))
