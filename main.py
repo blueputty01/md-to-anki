@@ -166,7 +166,7 @@ def parse_markdown(content, deck_name, tag, media_root):
     text = ""
     extra = ""
 
-    all = []
+    all_cards = []
 
     # is building multi line extra
     is_building_ml_extra = False
@@ -204,7 +204,7 @@ def parse_markdown(content, deck_name, tag, media_root):
 
         if line == "---":
             if is_building_ml_extra:
-                all.append(create_card(text, extra))
+                all_cards.append(create_card(text, extra))
                 text = ""
                 extra = ""
                 append = False
@@ -221,7 +221,7 @@ def parse_markdown(content, deck_name, tag, media_root):
 
         if append:
             if text != "":
-                all.append(create_card(text, extra))
+                all_cards.append(create_card(text, extra))
                 append = False
             text = ""
             extra = ""
@@ -236,9 +236,9 @@ def parse_markdown(content, deck_name, tag, media_root):
             text += "\n"
 
     if text != "":
-        all.append(create_card(text, extra))
+        all_cards.append(create_card(text, extra))
 
-    return all
+    return all_cards
 
 
 def process_file(root, deck_name, deck_directory, file_path):
