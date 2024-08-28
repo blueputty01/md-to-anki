@@ -28,7 +28,7 @@ from rich.progress import Progress
 # finally, parse the markdown into anki cards and import them using the AnkiConnect api
 
 
-def parse_markdown(content, deck_name, tag, media_root):
+def parse_markdown(content, deck_name, tags, media_root):
     def create_card(t, e):
         def pre_process(input_string):
             input_string = input_string.strip()
@@ -149,7 +149,7 @@ def parse_markdown(content, deck_name, tag, media_root):
             "deckName": deck_name,
             "modelName": "cloze",
             "fields": {"Text": t, "Extra": e},
-            "tags": [tag],
+            "tags": tags,
             "options": {
                 "allowDuplicate": False,
                 "duplicateScope": deck_name,
@@ -276,7 +276,7 @@ def process_file(root, deck_name, deck_directory, file_path):
         tag += "::"
         tag += tag_path
 
-        return parse_markdown(content, deck_name, tag, root)
+        return parse_markdown(content, deck_name, [tag], root)
 
 
 def main():

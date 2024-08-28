@@ -13,6 +13,10 @@ Imports Markdown files into Anki (spaced repetition software) to keep memory of 
 * Images
 * Uses [anki-connect](https://github.com/FooSoft/anki-connect#media-actions) to automatically add parsed data to Anki
 
+## Tag syntax
+
+The title of the markdown file is used as the tag for the imported notes. - denotes a subtag (replaced with ::) 
+
 ## Example ❔
 
 ### Input text:
