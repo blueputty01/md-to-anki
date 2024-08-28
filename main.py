@@ -3,12 +3,11 @@ import os
 import re
 import markdown2
 import anki
-import logging
 from urllib.parse import unquote
 from deckConsts import DECKS, OUTPUT_DIR
 from rich.console import Console
-from rich.logging import RichHandler
 from rich.progress import Progress
+
 
 def parse_markdown(content, deck_name, tags, media_root):
     def create_card(t, e):
@@ -240,7 +239,6 @@ def process_file(root, deck_name, deck_directory, file_path):
             imported_parts = content.split("***")
             content = imported_parts[-1]
 
-
         tag = "#"
         tag += "::#".join(deck_name.replace(" ", "").split("::"))
 
@@ -264,10 +262,6 @@ def process_file(root, deck_name, deck_directory, file_path):
 def main():
     console = Console()
 
-    logging.basicConfig(
-        level="NOTSET", handlers=[RichHandler(console=console, level="NOTSET")]
-    )
-
     # status = console.status("Initializing")
     with Progress(console=console, transient=True) as progress:
         # with Live(Group( progress, status)):
@@ -279,7 +273,6 @@ def main():
                 progress.remove_task(task)
 
             console.print(f" --- [blue]{deck_name}[/blue] --- ")
-
 
             for root, _, files in os.walk(deck_directory):
                 task = progress.add_task(f"[green][bold]{deck_name}", total=len(files))
@@ -298,7 +291,9 @@ def main():
                     file_path = os.path.join(root, file)
                     try:
                         # status.update(f"{file} -- Processing file contents")
-                        all_cards = process_file(root, deck_name, deck_directory, file_path)
+                        all_cards = process_file(
+                            root, deck_name, deck_directory, file_path
+                        )
 
                         if len(all_cards) == 0:
                             progress.advance(task)
@@ -325,14 +320,17 @@ def main():
 
                         while os.path.exists(
                             os.path.join(
-                                OUTPUT_DIR, f"{base_file_name}_{counter}{file_extension}"
+                                OUTPUT_DIR,
+                                f"{base_file_name}_{counter}{file_extension}",
                             )
                         ):
                             counter += 1
 
                         file_name = f"{base_file_name}_{counter}{file_extension}"
 
-                        with open(os.path.join(OUTPUT_DIR, file_name), "w", encoding="utf-8") as error_file:
+                        with open(
+                            os.path.join(OUTPUT_DIR, file_name), "w", encoding="utf-8"
+                        ) as error_file:
                             error_file.write("\n".join(rejected))
 
                         print(f"Output written to {file_name}")
