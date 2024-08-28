@@ -31,6 +31,8 @@ Appends at the end of the last imported section.
 
 > The <ins>Articles of Confederation</ins> defined the government that ran the American Revolution.
 >
+> ---
+>
 > * Land Ordinance Act of 1785
 >     * allowed federal government to sell western lands
 >         * pay off national debt
@@ -43,6 +45,8 @@ Appends at the end of the last imported section.
 > * 1786
 > * crushed by Massachusetts state militia
 > * watershed moment for new government
+> ---
+> 
 
 ### Outputted note 1:
 
