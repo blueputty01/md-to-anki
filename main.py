@@ -10,24 +10,6 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.progress import Progress
 
-
-# from pygments import highlight
-# from pygments.lexers import get_lexer_by_name
-# from pygments.formatters import HtmlFormatter
-
-# md_langname_to_pygments_lexer = {
-#     "cs" : "csharp",
-#     "java" : "java",
-#     "js" : "javascript",
-#     "py" : "python",
-#     "python" : "python"
-# }
-
-# iterate through all markdown files in directory, ignoring files that begin with _.
-# then, read yaml frontmatter and ignore files that have "imported" set to true.
-# finally, parse the markdown into anki cards and import them using the AnkiConnect api
-
-
 def parse_markdown(content, deck_name, tags, media_root):
     def create_card(t, e):
         def pre_process(input_string):
@@ -285,7 +267,6 @@ def main():
     logging.basicConfig(
         level="NOTSET", handlers=[RichHandler(console=console, level="NOTSET")]
     )
-    logger = logging.getLogger("rich")
 
     # status = console.status("Initializing")
     with Progress(console=console, transient=True) as progress:
@@ -299,82 +280,78 @@ def main():
 
             console.print(f" --- [blue]{deck_name}[/blue] --- ")
 
-            try:
-                root, _, files = next(os.walk(deck_directory))
-            except StopIteration:
-                logger.exception("Directory %s does not exist.", deck_directory)
-                continue
 
-            task = progress.add_task(f"[green][bold]{deck_name}", total=len(files))
+            for root, _, files in os.walk(deck_directory):
+                task = progress.add_task(f"[green][bold]{deck_name}", total=len(files))
 
-            # Process each note file in the current deck directory
-            for file in files:
-                # status.update(f"{file} -- Parsing")
+                # Process each note file in the current deck directory
+                for file in files:
+                    # status.update(f"{file} -- Parsing")
 
-                all_cards = []
-                rejected = []
-                # Process only Markdown files and ignore files starting with '_'
-                if file.startswith("_") or not file.endswith(".md"):
-                    progress.advance(task)
-                    continue
-
-                file_path = os.path.join(root, file)
-                try:
-                    # status.update(f"{file} -- Processing file contents")
-                    all_cards = process_file(root, deck_name, deck_directory, file_path)
-
-                    if len(all_cards) == 0:
+                    all_cards = []
+                    rejected = []
+                    # Process only Markdown files and ignore files starting with '_'
+                    if file.startswith("_") or not file.endswith(".md"):
                         progress.advance(task)
                         continue
 
-                    # import cards using AnkiConnect api
-                    # status.update(f"{file} -- Sending")
-                    console.print(f"[bold]{file}[/bold]")
-                    rejected = anki.send_notes(console, all_cards)
+                    file_path = os.path.join(root, file)
+                    try:
+                        # status.update(f"{file} -- Processing file contents")
+                        all_cards = process_file(root, deck_name, deck_directory, file_path)
 
-                    # status.update(f"{file} -- Sent!")
-                except Exception:
-                    progress.console.print_exception(show_locals=True)
+                        if len(all_cards) == 0:
+                            progress.advance(task)
+                            continue
 
-                # status.stop()
-                if rejected is None:
-                    # anki connect is not running
-                    return None
+                        # import cards using AnkiConnect api
+                        # status.update(f"{file} -- Sending")
+                        console.print(f"[bold]{file}[/bold]")
+                        rejected = anki.send_notes(console, all_cards)
 
-                if rejected:
-                    base_file_name = "anki-import-error"
-                    file_extension = ".txt"
-                    counter = 1
+                        # status.update(f"{file} -- Sent!")
+                    except Exception:
+                        progress.console.print_exception(show_locals=True)
 
-                    while os.path.exists(
-                        os.path.join(
-                            OUTPUT_DIR, f"{base_file_name}_{counter}{file_extension}"
-                        )
-                    ):
-                        counter += 1
+                    # status.stop()
+                    if rejected is None:
+                        # anki connect is not running
+                        return None
 
-                    file_name = f"{base_file_name}_{counter}{file_extension}"
+                    if rejected:
+                        base_file_name = "anki-import-error"
+                        file_extension = ".txt"
+                        counter = 1
 
-                    with open(os.path.join(OUTPUT_DIR, file_name), "w", encoding="utf-8") as error_file:
-                        error_file.write("\n".join(rejected))
+                        while os.path.exists(
+                            os.path.join(
+                                OUTPUT_DIR, f"{base_file_name}_{counter}{file_extension}"
+                            )
+                        ):
+                            counter += 1
 
-                    print(f"Output written to {file_name}")
+                        file_name = f"{base_file_name}_{counter}{file_extension}"
+
+                        with open(os.path.join(OUTPUT_DIR, file_name), "w", encoding="utf-8") as error_file:
+                            error_file.write("\n".join(rejected))
+
+                        print(f"Output written to {file_name}")
+                        progress.advance(task)
+                        continue
+
+                    with open(file_path, "a+", encoding="utf-8") as f:
+                        content = f.read()
+                        # count number of new line characters at end of file
+                        counter = 0
+                        while content.endswith("\n"):
+                            content = content[:-1]
+                            counter += 1
+
+                        if counter < 2:
+                            f.write("\n\n")
+                        f.write("***\n")
+
                     progress.advance(task)
-                    continue
-
-                with open(file_path, "a+", encoding="utf-8") as f:
-                    content = f.read()
-                    # count number of new line characters at end of file
-                    counter = 0
-                    while content.endswith("\n"):
-                        content = content[:-1]
-                        counter += 1
-
-                    if counter < 2:
-                        f.write("\n\n")
-                    f.write("***\n")
-
-                progress.advance(task)
 
 
 if __name__ == "__main__":
