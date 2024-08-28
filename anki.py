@@ -46,8 +46,7 @@ def send_notes(console, notes):
     result = invoke("addNotes", notes=notes)
 
     if result is None:
-        console.print("AnkiConnect is not running. Please start Anki and try again.")
-        return None
+        raise AnkiError("AnkiConnect is not running. Please start Anki and try again.")
 
     rejected = []
 

@@ -1,5 +1,6 @@
 import hashlib
 import os
+import sys
 import re
 import markdown2
 import anki
@@ -305,13 +306,9 @@ def main():
                         rejected = anki.send_notes(console, all_cards)
 
                         # status.update(f"{file} -- Sent!")
-                    except Exception:
-                        progress.console.print_exception(show_locals=True)
-
-                    # status.stop()
-                    if rejected is None:
-                        # anki connect is not running
-                        return None
+                    except anki.AnkiError as e:
+                        progress.console.print(e)
+                        sys.exit(1)
 
                     if rejected:
                         base_file_name = "anki-import-error"
