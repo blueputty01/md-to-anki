@@ -1,7 +1,6 @@
 import json
 import socket
 import urllib.request
-import os
 
 
 def request(action, **params):
@@ -26,13 +25,13 @@ def invoke(action, **params):
         )
 
         if len(response) != 2:
-            raise Exception("response has an unexpected number of fields")
+            raise ValueError("response has an unexpected number of fields")
         if "error" not in response:
-            raise Exception("response is missing required error field")
+            raise ValueError("response is missing required error field")
         if "result" not in response:
-            raise Exception("response is missing required result field")
+            raise ValueError("response is missing required result field")
         if response["error"] is not None:
-            raise Exception(response["error"])
+            raise ValueError(response["error"])
         return response["result"]
     else:
         print("Port is closed")
