@@ -4,11 +4,7 @@ import urllib.request
 
 
 class AnkiError(Exception):
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return self.message
+    pass
 
 
 def request(action, **params):
