@@ -1,7 +1,10 @@
 import json
 import socket
 import urllib.request
-import os
+
+
+class AnkiError(Exception):
+    pass
 
 
 def request(action, **params):
@@ -26,13 +29,13 @@ def invoke(action, **params):
         )
 
         if len(response) != 2:
-            raise Exception("response has an unexpected number of fields")
+            raise ValueError("response has an unexpected number of fields")
         if "error" not in response:
-            raise Exception("response is missing required error field")
+            raise ValueError("response is missing required error field")
         if "result" not in response:
-            raise Exception("response is missing required result field")
+            raise ValueError("response is missing required result field")
         if response["error"] is not None:
-            raise Exception(response["error"])
+            raise AnkiError(response["error"])
         return response["result"]
     else:
         print("Port is closed")
@@ -43,8 +46,7 @@ def send_notes(console, notes):
     result = invoke("addNotes", notes=notes)
 
     if result is None:
-        console.print("AnkiConnect is not running. Please start Anki and try again.")
-        return None
+        raise AnkiError("AnkiConnect is not running. Please start Anki and try again.")
 
     rejected = []
 
@@ -55,7 +57,9 @@ def send_notes(console, notes):
 
     rej_count = len(rejected)
     color = "red" if rej_count > 0 else "green"
-    console.print(f"[{color}]{total - rej_count} / {total}[/{color}] notes were successfully added to Anki.")
+    console.print(
+        f"[{color}]{total - rej_count} / {total}[/{color}] notes were successfully added to Anki."
+    )
     if rej_count > 0:
         console.print("The following notes were rejected by Anki:")
         console.print(*rejected, sep="\n")

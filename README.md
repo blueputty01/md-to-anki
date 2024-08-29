@@ -1,4 +1,4 @@
-# Google Doc to Anki 📄
+# Markdown to Anki 📄
 
 Imports Markdown files into Anki (spaced repetition software) to keep memory of notes fresh.
 
@@ -12,6 +12,10 @@ Imports Markdown files into Anki (spaced repetition software) to keep memory of 
 * Bold/italics
 * Images
 * Uses [anki-connect](https://github.com/FooSoft/anki-connect#media-actions) to automatically add parsed data to Anki
+
+## Tag syntax
+
+The title of the markdown file is used as the tag for the imported notes. - denotes a subtag (replaced with ::) 
 
 ## Example ❔
 
@@ -27,6 +31,8 @@ Appends at the end of the last imported section.
 
 > The <ins>Articles of Confederation</ins> defined the government that ran the American Revolution.
 >
+> ---
+>
 > * Land Ordinance Act of 1785
 >     * allowed federal government to sell western lands
 >         * pay off national debt
@@ -39,6 +45,8 @@ Appends at the end of the last imported section.
 > * 1786
 > * crushed by Massachusetts state militia
 > * watershed moment for new government
+> ---
+> 
 
 ### Outputted note 1:
 
