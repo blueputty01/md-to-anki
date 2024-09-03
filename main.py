@@ -1,13 +1,14 @@
-import hashlib
 import os
 import sys
 import re
 import markdown2
-import anki
 from urllib.parse import unquote
 from deckConsts import DECKS, OUTPUT_DIR
 from rich.console import Console
 from rich.progress import Progress
+from utils import anki
+from utils import markdownHelper
+from utils import utils
 
 
 def parse_markdown(content, deck_name, tags, media_root):
@@ -60,7 +61,6 @@ def parse_markdown(content, deck_name, tags, media_root):
             )
             s = s.replace("\n", "")
             s = s.replace("<p>", "").replace("</p>", "")
-            
             # process latex
             # multi-line
             ml_latex = re.findall(r"\$\$(.*?)\$\$", s)
@@ -77,27 +77,13 @@ def parse_markdown(content, deck_name, tags, media_root):
             # process images
             images = re.findall(r'<img src="(.*?)"', s)
 
-            def hash_file(path):
-                BUFF_SIZE = 65536  # read in 64kb chunks
-
-                sha1 = hashlib.sha1()
-
-                with open(path, "rb") as f:
-                    while True:
-                        data = f.read(BUFF_SIZE)
-                        if not data:
-                            break
-                        sha1.update(data)
-
-                return sha1.hexdigest()
-
             for image in images:
                 image_path = os.path.join(
                     media_root, unquote(image).replace("/", os.sep)
                 )
                 _, ext = os.path.splitext(image_path)
 
-                image_id = hash_file(image_path)
+                image_id = utils.hash_file(image_path)
                 filename = f"{image_id}{ext}"
 
                 anki.send_media({"filename": filename, "path": image_path})
@@ -213,10 +199,7 @@ def process_file(root, deck_name, deck_directory, file_path):
         content = f.read()
 
         # isolate yaml stuff
-        if content.startswith("---"):
-            part = content[2:]
-            last_index = part.index("---")
-            content = part[last_index + 3 :]
+        content = markdownHelper.removeYaml(content)
 
         if content.rstrip("\n ").endswith("***"):
             return []
@@ -301,17 +284,17 @@ def main():
                         counter = 1
 
                         while os.path.exists(
-                            os.path.join(
-                                OUTPUT_DIR,
-                                f"{base_file_name}_{counter}{file_extension}",
-                            )
+                                os.path.join(
+                                    OUTPUT_DIR,
+                                    f"{base_file_name}_{counter}{file_extension}",
+                                )
                         ):
                             counter += 1
 
                         file_name = f"{base_file_name}_{counter}{file_extension}"
 
                         with open(
-                            os.path.join(OUTPUT_DIR, file_name), "w", encoding="utf-8"
+                                os.path.join(OUTPUT_DIR, file_name), "w", encoding="utf-8"
                         ) as error_file:
                             error_file.write("\n".join(rejected))
 
