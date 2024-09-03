@@ -3,12 +3,15 @@ import sys
 import re
 import markdown2
 from urllib.parse import unquote
-from deckConsts import DECKS, OUTPUT_DIR
+
 from rich.console import Console
 from rich.progress import Progress
+
 from utils import anki
 from utils import markdownHelper
 from utils import utils
+
+from deckConsts import DECKS, OUTPUT_DIR
 
 
 def parse_markdown(content, deck_name, tags, media_root):
