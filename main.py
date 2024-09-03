@@ -37,7 +37,7 @@ def parse_markdown(content, deck_name, tags, media_root):
                 extras=[
                     # Allows a code block to not have to be indented by fencing it with '```' on a line before and after
                     # Based on http://github.github.com/github-flavored-markdown/ with support for syntax highlighting.
-                    # "fenced-code-blocks",
+                    "fenced-code-blocks",
                     # tables: Tables using the same format as GFM and PHP-Markdown Extra.
                     "tables",
                     # cuddled-lists: Allow lists to be cuddled to the preceding paragraph.
@@ -59,19 +59,7 @@ def parse_markdown(content, deck_name, tags, media_root):
             )
 
             s = s.replace("<p>", "").replace("</p>", "")
-
-            # # process code
-            # ml_code = re.findall(r"\`\`\`(.*?)\`\`\`", s)
-            # for code in ml_code:
-            #     lang = ""
-            #     if md_langname_to_pygments_lexer.contains_key(ml_code.split(' ')[0]):
-            #         lang = md_langname_to_pygments_lexer[ml_code.split(' ')[0]]
-
-            #     print("lang: " + lang);
-            #     lexer = get_lexer_by_name(lang, stripall=True)
-            #     formatter = HtmlFormatter(linenos=False, noclasses=True)
-            #     print(highlight(code, lexer, formatter));
-
+            
             # process latex
             # multi-line
             ml_latex = re.findall(r"\$\$(.*?)\$\$", s)
