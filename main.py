@@ -34,30 +34,31 @@ def parse_markdown(content, deck_name, tags, media_root):
         def post_process(raw_string):
             s = markdown2.markdown(
                 raw_string,
-                extras=[
+                extras={
+                    "breaks": {"on_newline": True, "on_backslash": True},
                     # Allows a code block to not have to be indented by fencing it with '```' on a line before and after
                     # Based on http://github.github.com/github-flavored-markdown/ with support for syntax highlighting.
-                    "fenced-code-blocks",
+                    "fenced-code-blocks": None,
                     # tables: Tables using the same format as GFM and PHP-Markdown Extra.
-                    "tables",
+                    "tables": None,
                     # cuddled-lists: Allow lists to be cuddled to the preceding paragraph.
-                    "cuddled-lists",
+                    "cuddled-lists": None,
                     # code-friendly: The code-friendly extra disables the use of leading, trailing and
                     # --most importantly-- intra-word emphasis (<em>) and strong (<strong>)
                     # using single or double underscores, respectively.
-                    "code-friendly",
+                    "code-friendly": None,
                     # footnotes: support footnotes as in use on daringfireball.net and implemented in other
                     # Markdown processors (tho not in Markdown.pl v1.0.1).
-                    "footnotes",
+                    "footnotes": None,
                     # smarty-pants: Fancy quote, em-dash and ellipsis handling similar to
                     # http://daringfireball.net/projects/smartypants/. See old issue 42 for discussion.
-                    "smarty-pants",
+                    "smarty-pants": None,
                     # target-blank-links: Add target="_blank" to all <a> tags with an href.
                     # This causes the link to be opened in a new tab upon a click.
-                    "target-blank-links",
-                ],
+                    "target-blank-links": None,
+                }
             )
-
+            s = s.replace("\n", "")
             s = s.replace("<p>", "").replace("</p>", "")
             
             # process latex
@@ -107,10 +108,6 @@ def parse_markdown(content, deck_name, tags, media_root):
 
         t = post_process(t)
         e = post_process(e)
-
-        new_line = "<br />"
-        t = t.replace("\n", new_line).replace(f">{new_line}<", "> <")
-        e = e.replace("\n", new_line)
 
         # print(f"Creating card with text: {t}")
         # print(f"Creating card with extra: {e}")
