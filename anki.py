@@ -4,8 +4,9 @@ import urllib.request
 
 
 class AnkiError(Exception):
-    pass
-
+    def __init__(self, e, result):
+        self.e = e
+        self.result = result
 
 def request(action, **params):
     return {"action": action, "params": params, "version": 6}
@@ -35,7 +36,7 @@ def invoke(action, **params):
         if "result" not in response:
             raise ValueError("response is missing required result field")
         if response["error"] is not None:
-            raise AnkiError(response["error"])
+            raise AnkiError(response["error"], response["result"])
         return response["result"]
     else:
         print("Port is closed")
@@ -46,7 +47,7 @@ def send_notes(console, notes):
     result = invoke("addNotes", notes=notes)
 
     if result is None:
-        raise AnkiError("AnkiConnect is not running. Please start Anki and try again.")
+        raise AnkiError("AnkiConnect is not running. Please start Anki and try again.", [])
 
     rejected = []
 
