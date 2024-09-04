@@ -4,60 +4,104 @@ Imports Markdown files into Anki (spaced repetition software) to keep memory of 
 
 # How to use 🤔
 
-1. Run `main.py` using one of the runner files based on your operating system, with modifications based on the markdown file location.
+1. Setup Anki and install the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) plugin.
+2. Create a deckConsts.py file in the same directory as main.py with the content:
+
+```python
+# Path to the root directory of your markdown notes
+ROOT = ""
+
+# Mapping of deck names to markdown directories
+DECKS = {
+    # deck name : markdown directory path
+    "math::math241": "@2.1/math241"  # deck name is math::math241, markdown directory path is @2.1/math241
+}
+
+# automatically builds full key/value path mapping
+DECKS = {k: ROOT + v for k, v in DECKS.items()}
+# if the title of the markdown file contains any of these keywords, it will be ignored
+IGNORE_KEYWORDS = "discussion"
+# output directory for any errors
+OUTPUT_DIR = ""
+```
+
+3. Run `main.py` using one of the runner files based on your operating system, with modifications based on the markdown
+   file location.
 
 ## Features ⚒️
 
-* Nested lists
-* Bold/italics
+* LaTeX support via MathJax
+* Cloze deletion
+* Syntax highlighting (must set up [pygments.css](https://github.com/richleland/pygments-css) in Anki card styles)
 * Images
 * Uses [anki-connect](https://github.com/FooSoft/anki-connect#media-actions) to automatically add parsed data to Anki
 
+## Cloze deletion syntax
+
+All notes are imported to the cloze type. Any bold text, notated by markdown `**bold text**` is converted to cloze
+fields.
+
+By default, cloze fields will be numbered in the order they appear in the note. To manually number cloze fields, use
+`{{c#::text}}`. The automatic counting will be reset to the number following the `#`.
+
+## New card syntax
+
+Double line breaks delineate new cards.
+
 ## Tag syntax
 
-The title of the markdown file is used as the tag for the imported notes. - denotes a subtag (replaced with ::) 
+The title of the markdown file is used as the tag for the imported notes. `-` in the title denotes a subtag (replaced
+with ::).
 
-## Example ❔
+### Example:
 
-### Input text:
+Folder set up in `deckConsts.py` is `"math::math240": "blueputty01/math240/"`. A markdown file is processed at
+`"blueputty01/math240/6 Orthogonality and Least Squares/2 Orthogonal Sets.md"`.
+The tag for the imported notes will be `#math::#math240::6OrthogonalityandLeastSquares::2OrthogonalSets`.
 
-All notes are imported with the cloze type. Bold text is converted to cloze fields. 
+## Extra field
 
-Breaks between notes refer to new fields.
+Indented text refer to text in the extra field for the card directly above.
 
-indented text refer to text in the extra field. Alternatively, an extra field may be surrounded by "---"
+Alternatively, an extra field may be surrounded by `---`.
 
-Appends at the end of the last imported section.
+```markdown
 
-> The <ins>Articles of Confederation</ins> defined the government that ran the American Revolution.
->
-> ---
->
-> * Land Ordinance Act of 1785
->     * allowed federal government to sell western lands
->         * pay off national debt
->         * organize new lands into townships and public schools
-> * Northwest Ordinance of 1787
->     * provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
-> 
-> <ins>Shay’s Rebellion</ins> was when farmers struggled to pay their taxes post American Revolution
-> 
-> * 1786
-> * crushed by Massachusetts state militia
-> * watershed moment for new government
-> ---
-> 
+The **Articles of Confederation** defined the government that ran the American Revolution.
 
-### Outputted note 1:
+---
 
-Text: 
+This text is in the extra field
+
+* Land Ordinance Act of 1785
+    * allowed federal government to sell western lands
+        * pay off national debt
+        * organize new lands into townships and public schools
+* Northwest Ordinance of 1787
+    * provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
+
+---
+
+This is another card; **this text will be marked for cloze**.
+    This line is in the extra field.
+
+```
+
+### Parsed result of note 1:
+
+Text:
 > The {{c1::Articles of Confederation}} defined the government that ran the American Revolution.
 
 Extra:
 
 > * Land Ordinance Act of 1785
->     * allowed federal government to sell western lands
->         * pay off national debt
->         * organize new lands into townships and public schools
+>   * allowed federal government to sell western lands
+>   * pay off national debt
+>   * organize new lands into townships and public schools
 > * Northwest Ordinance of 1787
->     * provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
+>  * provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
+
+# How it works 🛠️
+
+Once a file is successfully parsed, the script will add `***` to the end of the file name to indicate that it has been
+processed. If the file has already been processed, it will be skipped.
