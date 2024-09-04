@@ -1,4 +1,4 @@
-def removeYaml(content):
+def remove_yaml(content):
     if content.startswith("---"):
         part = content[2:]
         last_index = part.index("---")

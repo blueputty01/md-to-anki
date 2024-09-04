@@ -53,6 +53,9 @@ Double line breaks delineate new cards.
 The title of the markdown file is used as the tag for the imported notes. `-` in the title denotes a subtag (replaced
 with ::).
 
+Alternatively, use headings in the markdown file to denote tags. The first heading will be the main tag, and the second
+heading will be the subtag, etc.
+
 ### Example:
 
 Folder set up in `deckConsts.py` is `"math::math240": "blueputty01/math240/"`. A markdown file is processed at
@@ -105,3 +108,7 @@ Extra:
 
 Once a file is successfully parsed, the script will add `***` to the end of the file name to indicate that it has been
 processed. If the file has already been processed, it will be skipped.
+
+# Contributing 🤝
+
+Feel free to contribute to this project by opening an issue or creating a pull request!

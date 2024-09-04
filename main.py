@@ -1,6 +1,8 @@
 import os
 import sys
 import re
+from ctypes.wintypes import tagMSG
+
 import markdown2
 from urllib.parse import unquote
 
@@ -15,7 +17,7 @@ from deckConsts import DECKS, OUTPUT_DIR
 
 
 def parse_markdown(content, deck_name, tags, media_root):
-    def create_card(t, e):
+    def create_card(t, e, base_tags, heading_tags):
         def pre_process(input_string):
             input_string = input_string.strip()
             return input_string
@@ -101,11 +103,14 @@ def parse_markdown(content, deck_name, tags, media_root):
         # print(f"Creating card with text: {t}")
         # print(f"Creating card with extra: {e}")
 
+        heading_tag = "::".join(heading_tags)
+        new_tags = [f'{tag}::{heading_tag}' for tag in base_tags]
+
         return {
             "deckName": deck_name,
             "modelName": "cloze",
             "fields": {"Text": t, "Extra": e},
-            "tags": tags,
+            "tags": new_tags,
             "options": {
                 "allowDuplicate": False,
                 "duplicateScope": deck_name,
@@ -124,6 +129,8 @@ def parse_markdown(content, deck_name, tags, media_root):
 
     all_cards = []
 
+    tag_hierarchy = []
+
     # is building multi line extra
     is_building_ml_extra = False
 
@@ -137,6 +144,17 @@ def parse_markdown(content, deck_name, tags, media_root):
         if line.lstrip() == "+":
             text += "\n"
             text += "\n"
+            continue
+
+        if line.startswith("#"):
+            heading_indicator, heading = line.split(" ", 1)
+            tag = utils.string_to_tag(heading)
+            h_level = heading_indicator.count("#")
+            if len(tag_hierarchy) < h_level - 1:
+                raise ValueError("Invalid heading level")
+            while len(tag_hierarchy) > h_level - 1:
+                tag_hierarchy.pop()
+            tag_hierarchy.append(tag)
             continue
 
         if line.startswith("```"):
@@ -160,7 +178,7 @@ def parse_markdown(content, deck_name, tags, media_root):
 
         if line == "---":
             if is_building_ml_extra:
-                all_cards.append(create_card(text, extra))
+                all_cards.append(create_card(text, extra, tags, tag_hierarchy))
                 text = ""
                 extra = ""
                 append = False
@@ -177,7 +195,7 @@ def parse_markdown(content, deck_name, tags, media_root):
 
         if append:
             if text != "":
-                all_cards.append(create_card(text, extra))
+                all_cards.append(create_card(text, extra, tags, tag_hierarchy))
                 append = False
             text = ""
             extra = ""
@@ -192,7 +210,7 @@ def parse_markdown(content, deck_name, tags, media_root):
             text += "\n"
 
     if text != "":
-        all_cards.append(create_card(text, extra))
+        all_cards.append(create_card(text, extra, tags, tag_hierarchy))
 
     return all_cards
 
@@ -202,7 +220,7 @@ def process_file(root, deck_name, deck_directory, file_path):
         content = f.read()
 
         # isolate yaml stuff
-        content = markdownHelper.removeYaml(content)
+        content = markdownHelper.remove_yaml(content)
 
         if content.rstrip("\n ").endswith("***"):
             return []
@@ -216,17 +234,8 @@ def process_file(root, deck_name, deck_directory, file_path):
 
         last_path = file_path.replace(deck_directory, "").replace(".md", "")
 
-        # remove leading/trailing slashes
-        tag_path = last_path.strip(os.sep)
-        # replace slashes with double colons
-        tag_path = tag_path.replace(os.sep, "::")
-        # remove spaces
-        tag_path = tag_path.replace(" ", "")
-        # replace dashes with sub tag
-        tag_path = tag_path.replace("-", "::")
-
         tag += "::"
-        tag += tag_path
+        tag += utils.string_to_tag(last_path)
 
         return parse_markdown(content, deck_name, [tag], root)
 
@@ -240,14 +249,14 @@ def main():
         task = None
 
         # iterate over the specified deck names and directories
-        for deck_name, deck_directory in DECKS.items():
+        for deck_path, deck_directory in DECKS.items():
             if task is not None:
                 progress.remove_task(task)
 
-            console.print(f" --- [blue]{deck_name}[/blue] --- ")
+            console.print(f" --- [blue]{deck_path}[/blue] --- ")
 
             for root, _, files in os.walk(deck_directory):
-                task = progress.add_task(f"[green][bold]{deck_name}", total=len(files))
+                task = progress.add_task(f"[green][bold]{deck_path}", total=len(files))
 
                 # Process each note file in the current deck directory
                 for file in files:
@@ -264,7 +273,7 @@ def main():
                     try:
                         # status.update(f"{file} -- Processing file contents")
                         all_cards = process_file(
-                            root, deck_name, deck_directory, file_path
+                            root, deck_path, deck_directory, file_path
                         )
 
                         if len(all_cards) == 0:
