@@ -1,7 +1,6 @@
 import os
 import sys
 import re
-from ctypes.wintypes import tagMSG
 
 import markdown2
 from urllib.parse import unquote
@@ -13,7 +12,7 @@ from utils import anki
 from utils import markdownHelper
 from utils import utils
 
-from deckConsts import DECKS, OUTPUT_DIR
+from deckConsts import DECKS, OUTPUT_DIR, IGNORE_KEYWORDS
 
 
 def parse_markdown(content, deck_name, tags, media_root):
@@ -260,10 +259,11 @@ def main():
 
                 # Process each note file in the current deck directory
                 for file in files:
+                    if root.split(os.sep)[-1].startswith(IGNORE_KEYWORDS):
+                        print(f"Skipping {file}")
+                        continue
                     # status.update(f"{file} -- Parsing")
 
-                    all_cards = []
-                    rejected = []
                     # Process only Markdown files and ignore files starting with '_'
                     if file.startswith("_") or not file.endswith(".md"):
                         progress.advance(task)
