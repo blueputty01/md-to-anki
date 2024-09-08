@@ -1,17 +1,22 @@
-import hashlib
 import os
 import sys
 import re
+
 import markdown2
-import anki
 from urllib.parse import unquote
-from deckConsts import DECKS, OUTPUT_DIR
+
 from rich.console import Console
 from rich.progress import Progress
 
+from utils import anki
+from utils import markdownHelper
+from utils import utils
+
+from deckConsts import DECKS, OUTPUT_DIR, IGNORE_KEYWORDS
+
 
 def parse_markdown(content, deck_name, tags, media_root):
-    def create_card(t, e):
+    def create_card(t, e, base_tags, heading_tags):
         def pre_process(input_string):
             input_string = input_string.strip()
             return input_string
@@ -34,32 +39,32 @@ def parse_markdown(content, deck_name, tags, media_root):
         def post_process(raw_string):
             s = markdown2.markdown(
                 raw_string,
-                extras=[
+                extras={
+                    "breaks": {"on_newline": True, "on_backslash": True},
                     # Allows a code block to not have to be indented by fencing it with '```' on a line before and after
                     # Based on http://github.github.com/github-flavored-markdown/ with support for syntax highlighting.
-                    "fenced-code-blocks",
+                    "fenced-code-blocks": None,
                     # tables: Tables using the same format as GFM and PHP-Markdown Extra.
-                    "tables",
+                    "tables": None,
                     # cuddled-lists: Allow lists to be cuddled to the preceding paragraph.
-                    "cuddled-lists",
+                    "cuddled-lists": None,
                     # code-friendly: The code-friendly extra disables the use of leading, trailing and
                     # --most importantly-- intra-word emphasis (<em>) and strong (<strong>)
                     # using single or double underscores, respectively.
-                    "code-friendly",
+                    "code-friendly": None,
                     # footnotes: support footnotes as in use on daringfireball.net and implemented in other
                     # Markdown processors (tho not in Markdown.pl v1.0.1).
-                    "footnotes",
+                    "footnotes": None,
                     # smarty-pants: Fancy quote, em-dash and ellipsis handling similar to
                     # http://daringfireball.net/projects/smartypants/. See old issue 42 for discussion.
-                    "smarty-pants",
+                    "smarty-pants": None,
                     # target-blank-links: Add target="_blank" to all <a> tags with an href.
                     # This causes the link to be opened in a new tab upon a click.
-                    "target-blank-links",
-                ],
+                    "target-blank-links": None,
+                }
             )
-
+            s = s.replace("\n", "")
             s = s.replace("<p>", "").replace("</p>", "")
-
             # process latex
             # multi-line
             ml_latex = re.findall(r"\$\$(.*?)\$\$", s)
@@ -76,27 +81,13 @@ def parse_markdown(content, deck_name, tags, media_root):
             # process images
             images = re.findall(r'<img src="(.*?)"', s)
 
-            def hash_file(path):
-                BUFF_SIZE = 65536  # read in 64kb chunks
-
-                sha1 = hashlib.sha1()
-
-                with open(path, "rb") as f:
-                    while True:
-                        data = f.read(BUFF_SIZE)
-                        if not data:
-                            break
-                        sha1.update(data)
-
-                return sha1.hexdigest()
-
             for image in images:
                 image_path = os.path.join(
                     media_root, unquote(image).replace("/", os.sep)
                 )
                 _, ext = os.path.splitext(image_path)
 
-                image_id = hash_file(image_path)
+                image_id = utils.hash_file(image_path)
                 filename = f"{image_id}{ext}"
 
                 anki.send_media({"filename": filename, "path": image_path})
@@ -108,18 +99,17 @@ def parse_markdown(content, deck_name, tags, media_root):
         t = post_process(t)
         e = post_process(e)
 
-        new_line = "<br />"
-        t = t.replace("\n", new_line).replace(f">{new_line}<", "> <")
-        e = e.replace("\n", new_line)
-
         # print(f"Creating card with text: {t}")
         # print(f"Creating card with extra: {e}")
+
+        heading_tag = "::".join(heading_tags)
+        new_tags = [f'{tag}::{heading_tag}' for tag in base_tags]
 
         return {
             "deckName": deck_name,
             "modelName": "cloze",
             "fields": {"Text": t, "Extra": e},
-            "tags": tags,
+            "tags": new_tags,
             "options": {
                 "allowDuplicate": False,
                 "duplicateScope": deck_name,
@@ -138,6 +128,8 @@ def parse_markdown(content, deck_name, tags, media_root):
 
     all_cards = []
 
+    tag_hierarchy = []
+
     # is building multi line extra
     is_building_ml_extra = False
 
@@ -151,6 +143,17 @@ def parse_markdown(content, deck_name, tags, media_root):
         if line.lstrip() == "+":
             text += "\n"
             text += "\n"
+            continue
+
+        if line.startswith("#"):
+            heading_indicator, heading = line.split(" ", 1)
+            tag = utils.string_to_tag(heading)
+            h_level = heading_indicator.count("#")
+            if len(tag_hierarchy) < h_level - 1:
+                raise ValueError("Invalid heading level")
+            while len(tag_hierarchy) > h_level - 1:
+                tag_hierarchy.pop()
+            tag_hierarchy.append(tag)
             continue
 
         if line.startswith("```"):
@@ -174,7 +177,7 @@ def parse_markdown(content, deck_name, tags, media_root):
 
         if line == "---":
             if is_building_ml_extra:
-                all_cards.append(create_card(text, extra))
+                all_cards.append(create_card(text, extra, tags, tag_hierarchy))
                 text = ""
                 extra = ""
                 append = False
@@ -191,7 +194,7 @@ def parse_markdown(content, deck_name, tags, media_root):
 
         if append:
             if text != "":
-                all_cards.append(create_card(text, extra))
+                all_cards.append(create_card(text, extra, tags, tag_hierarchy))
                 append = False
             text = ""
             extra = ""
@@ -206,7 +209,7 @@ def parse_markdown(content, deck_name, tags, media_root):
             text += "\n"
 
     if text != "":
-        all_cards.append(create_card(text, extra))
+        all_cards.append(create_card(text, extra, tags, tag_hierarchy))
 
     return all_cards
 
@@ -216,10 +219,7 @@ def process_file(root, deck_name, deck_directory, file_path):
         content = f.read()
 
         # isolate yaml stuff
-        if content.startswith("---"):
-            part = content[2:]
-            last_index = part.index("---")
-            content = part[last_index + 3 :]
+        content = markdownHelper.remove_yaml(content)
 
         if content.rstrip("\n ").endswith("***"):
             return []
@@ -233,17 +233,8 @@ def process_file(root, deck_name, deck_directory, file_path):
 
         last_path = file_path.replace(deck_directory, "").replace(".md", "")
 
-        # remove leading/trailing slashes
-        tag_path = last_path.strip(os.sep)
-        # replace slashes with double colons
-        tag_path = tag_path.replace(os.sep, "::")
-        # remove spaces
-        tag_path = tag_path.replace(" ", "")
-        # replace dashes with sub tag
-        tag_path = tag_path.replace("-", "::")
-
         tag += "::"
-        tag += tag_path
+        tag += utils.string_to_tag(last_path)
 
         return parse_markdown(content, deck_name, [tag], root)
 
@@ -257,21 +248,22 @@ def main():
         task = None
 
         # iterate over the specified deck names and directories
-        for deck_name, deck_directory in DECKS.items():
+        for deck_path, deck_directory in DECKS.items():
             if task is not None:
                 progress.remove_task(task)
 
-            console.print(f" --- [blue]{deck_name}[/blue] --- ")
+            console.print(f" --- [blue]{deck_path}[/blue] --- ")
 
             for root, _, files in os.walk(deck_directory):
-                task = progress.add_task(f"[green][bold]{deck_name}", total=len(files))
+                task = progress.add_task(f"[green][bold]{deck_path}", total=len(files))
 
                 # Process each note file in the current deck directory
                 for file in files:
+                    if root.split(os.sep)[-1].startswith(IGNORE_KEYWORDS):
+                        print(f"Skipping {file}")
+                        continue
                     # status.update(f"{file} -- Parsing")
 
-                    all_cards = []
-                    rejected = []
                     # Process only Markdown files and ignore files starting with '_'
                     if file.startswith("_") or not file.endswith(".md"):
                         progress.advance(task)
@@ -281,7 +273,7 @@ def main():
                     try:
                         # status.update(f"{file} -- Processing file contents")
                         all_cards = process_file(
-                            root, deck_name, deck_directory, file_path
+                            root, deck_path, deck_directory, file_path
                         )
 
                         if len(all_cards) == 0:
@@ -310,17 +302,17 @@ def main():
                         counter = 1
 
                         while os.path.exists(
-                            os.path.join(
-                                OUTPUT_DIR,
-                                f"{base_file_name}_{counter}{file_extension}",
-                            )
+                                os.path.join(
+                                    OUTPUT_DIR,
+                                    f"{base_file_name}_{counter}{file_extension}",
+                                )
                         ):
                             counter += 1
 
                         file_name = f"{base_file_name}_{counter}{file_extension}"
 
                         with open(
-                            os.path.join(OUTPUT_DIR, file_name), "w", encoding="utf-8"
+                                os.path.join(OUTPUT_DIR, file_name), "w", encoding="utf-8"
                         ) as error_file:
                             error_file.write("\n".join(rejected))
 
