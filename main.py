@@ -282,7 +282,13 @@ def main():
 
                         # status.update(f"{file} -- Sent!")
                     except anki.AnkiError as e:
-                        progress.console.print(e)
+                        # progress.console.print_exception()
+                        for i, item in enumerate(all_cards):
+                            progress.console.print(f"{item["fields"]["Text"]}\n\t{item["fields"]["Extra"]}", style='bold red' if e.result is None or e.result[i] is None else 'bold green')
+                            progress.console.print("\n----------\n\n")
+                        progress.console.print(e.result)
+                        progress.console.print(e.e)
+
                         sys.exit(1)
 
                     if rejected:
@@ -317,3 +323,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
