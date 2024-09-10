@@ -7,7 +7,7 @@ if __name__ == "__main__":
     else:
         from ..main import parse_markdown
 
-    with open("tests/test.md", "r", encoding="utf-8") as f:
+    with open("test.md", "r", encoding="utf-8") as f:
         content = f.read()
         test = parse_markdown(content, "temp", "#delete", "root")
-        print(test)
+        print(test[0]['fields']['Text'])
