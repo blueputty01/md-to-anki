@@ -17,26 +17,9 @@ from deckConsts import DECKS, OUTPUT_DIR, IGNORE_KEYWORDS
 
 def parse_markdown(content, deck_name, tags, media_root):
     def create_card(t, e, base_tags, heading_tags):
-        def pre_process(input_string):
-            input_string = input_string.strip()
-            return input_string
+        def process(raw_string):
+            raw_string = raw_string.strip()
 
-        t = pre_process(t)
-        e = pre_process(e)
-
-        # process clozes
-        cloze_id = 1
-        bold_matches = re.findall(r"\*\*(.*?)\*\*", t)
-        for bold_text in bold_matches:
-            cloze_text = bold_text
-            if not re.match(r"^\d+::.*", bold_text):
-                cloze_text = f"{cloze_id}::{bold_text}"
-                cloze_id += 1
-            cloze_text = f"{{{{c{cloze_text}}}}}"
-
-            t = t.replace(f"**{bold_text}**", cloze_text)
-
-        def post_process(raw_string):
             s = markdown2.markdown(
                 raw_string,
                 extras={
@@ -64,18 +47,19 @@ def parse_markdown(content, deck_name, tags, media_root):
                 }
             )
             s = s.replace("<p>", "").replace("</p>", "")
-            # process latex
+
+            # process latex. must happen after markdown conversion as markdown2 consumes backslash
             # multi-line
-            ml_latex = re.findall(r"\$\$(.*?)\$\$", s)
+            ml_latex = re.findall(r"\$\$(.*?)\$\$", raw_string)
             for latex in ml_latex:
-                latex = latex.replace("}}", "} }")
-                s = s.replace(f"$${latex}$$", f"\\[{latex}\\]")
+                new_latex = latex.replace("}}", "} }")
+                raw_string = raw_string.replace(f"$${latex}$$", f"\\[{new_latex}\\]")
 
             # single line
-            sl_latex = re.findall(r"\$(.*?)\$", s)
+            sl_latex = re.findall(r"\$(.*?)\$", raw_string)
             for latex in sl_latex:
-                latex = latex.replace("}}", "} }")
-                s = s.replace(f"${latex}$", f"\\({latex}\\)")
+                new_latex = latex.replace("}}", "} }")
+                raw_string = raw_string.replace(f"${latex}$", f"\\({new_latex}\\)")
 
             # process images
             images = re.findall(r'<img src="(.*?)"', s)
@@ -95,14 +79,26 @@ def parse_markdown(content, deck_name, tags, media_root):
 
             return s.strip("\n")
 
-        t = post_process(t)
-        e = post_process(e)
+        t = process(t)
+        e = process(e)
 
-        # print(f"Creating card with text: {t}")
-        # print(f"Creating card with extra: {e}")
+        # process clozes
+        cloze_id = 1
+        bold_matches = re.findall(r"<strong>(.*?)</strong>", t)
+        for bold_text in bold_matches:
+            cloze_text = bold_text
+            if not re.match(r"^\d+::.*", bold_text):
+                cloze_text = f"{cloze_id}::{bold_text}"
+                cloze_id += 1
+            cloze_text = f"{{{{c{cloze_text}}}}}"
 
-        heading_tag = "::".join(heading_tags)
-        new_tags = [f'{tag}::{heading_tag}' for tag in base_tags]
+            t = t.replace(f"<strong>{bold_text}</strong>", cloze_text)
+
+        if len(heading_tags) > 0:
+            heading_tag = "::".join(heading_tags)
+            new_tags = [f'{tag}::{heading_tag}' for tag in base_tags]
+        else:
+            new_tags = base_tags
 
         return {
             "deckName": deck_name,
@@ -314,15 +310,6 @@ def main():
                         continue
 
                     with open(file_path, "a+", encoding="utf-8") as f:
-                        content = f.read()
-                        # count number of new line characters at end of file
-                        counter = 0
-                        while content.endswith("\n"):
-                            content = content[:-1]
-                            counter += 1
-
-                        if counter < 2:
-                            f.write("\n\n")
                         f.write("***\n")
 
                     progress.advance(task)
@@ -330,4 +317,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    print("Complete.")
