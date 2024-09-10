@@ -17,7 +17,10 @@ from deckConsts import DECKS, OUTPUT_DIR, IGNORE_KEYWORDS
 
 def parse_markdown(content, deck_name, tags, media_root):
     def create_card(t, e, base_tags, heading_tags):
+        BOLD_TAGS = ("<strong>", "</strong>")
+
         def process(raw_string):
+            nonlocal BOLD_TAGS
             raw_string = raw_string.strip()
 
             s = markdown2.markdown(
@@ -44,22 +47,27 @@ def parse_markdown(content, deck_name, tags, media_root):
                     # target-blank-links: Add target="_blank" to all <a> tags with an href.
                     # This causes the link to be opened in a new tab upon a click.
                     "target-blank-links": None,
+                    "middle-word-em": {"allowed": False},
                 }
             )
             s = s.replace("<p>", "").replace("</p>", "")
+            # middle-word-em also ignores bold notation within latex, so we need to manually add that back
+            bolds = re.findall(r"\*\*(.*?)\*\*", s)
+            for bold in bolds:
+                s = s.replace(f"**{bold}**", f"{BOLD_TAGS[0]}{bold}{BOLD_TAGS[1]}")
 
             # process latex. must happen after markdown conversion as markdown2 consumes backslash
             # multi-line
-            ml_latex = re.findall(r"\$\$(.*?)\$\$", raw_string)
+            ml_latex = re.findall(r"\$\$(.*?)\$\$", s)
             for latex in ml_latex:
                 new_latex = latex.replace("}}", "} }")
-                raw_string = raw_string.replace(f"$${latex}$$", f"\\[{new_latex}\\]")
+                s = s.replace(f"$${latex}$$", f"\\[{new_latex}\\]")
 
             # single line
-            sl_latex = re.findall(r"\$(.*?)\$", raw_string)
+            sl_latex = re.findall(r"\$(.*?)\$", s)
             for latex in sl_latex:
                 new_latex = latex.replace("}}", "} }")
-                raw_string = raw_string.replace(f"${latex}$", f"\\({new_latex}\\)")
+                s = s.replace(f"${latex}$", f"\\({new_latex}\\)")
 
             # process images
             images = re.findall(r'<img src="(.*?)"', s)
@@ -84,7 +92,7 @@ def parse_markdown(content, deck_name, tags, media_root):
 
         # process clozes
         cloze_id = 1
-        bold_matches = re.findall(r"<strong>(.*?)</strong>", t)
+        bold_matches = re.findall(fr"{BOLD_TAGS[0]}(.*?){BOLD_TAGS[1]}", t)
         for bold_text in bold_matches:
             cloze_text = bold_text
             if not re.match(r"^\d+::.*", bold_text):
@@ -92,7 +100,7 @@ def parse_markdown(content, deck_name, tags, media_root):
                 cloze_id += 1
             cloze_text = f"{{{{c{cloze_text}}}}}"
 
-            t = t.replace(f"<strong>{bold_text}</strong>", cloze_text)
+            t = t.replace(f"{BOLD_TAGS[0]}{bold_text}{BOLD_TAGS[1]}", cloze_text)
 
         if len(heading_tags) > 0:
             heading_tag = "::".join(heading_tags)
