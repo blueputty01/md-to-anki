@@ -63,7 +63,6 @@ def parse_markdown(content, deck_name, tags, media_root):
                     "target-blank-links": None,
                 }
             )
-            s = s.replace("\n", "")
             s = s.replace("<p>", "").replace("</p>", "")
             # process latex
             # multi-line
