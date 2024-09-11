@@ -33,10 +33,10 @@ def parse_markdown(content, deck_name, tags, media_root):
                 ]
             )
             s = s.replace("<p>", "").replace("</p>", "")
-            # middle-word-em also ignores bold notation within latex, so we need to manually add that back
-            bolds = re.findall(r"\*\*(.*?)\*\*", s)
-            for bold in bolds:
-                s = s.replace(f"**{bold}**", f"{BOLD_TAGS[0]}{bold}{BOLD_TAGS[1]}")
+            # # middle-word-em also ignores bold notation within latex, so we need to manually add that back
+            # bolds = re.findall(r"\*\*(.*?)\*\*", s)
+            # for bold in bolds:
+            #     s = s.replace(f"**{bold}**", f"{BOLD_TAGS[0]}{bold}{BOLD_TAGS[1]}")
 
             # process latex. must happen after markdown conversion as markdown2 consumes backslash
             # multi-line
