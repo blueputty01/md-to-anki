@@ -4,6 +4,7 @@ import re
 
 import markdown
 from markdown.extensions import codehilite, fenced_code
+from md_mathjax import Md4MathjaxExtension
 
 from urllib.parse import unquote
 
@@ -30,28 +31,10 @@ def parse_markdown(content, deck_name, tags, media_root):
                 extensions=[
                     codehilite.CodeHiliteExtension(),
                     fenced_code.FencedCodeExtension(),
+                    Md4MathjaxExtension(),
                 ]
             )
             s = s.replace("<p>", "").replace("</p>", "")
-
-            # process latex. must happen after markdown conversion as markdown2 consumes backslash
-            # multi-line
-            ml_latex = re.findall(r"\$\$(.*?)\$\$", s)
-            for latex in ml_latex:
-                new_latex = latex.replace("}}", "} }")
-                # todo this would be cleaner as an extension to the markdown package
-                # https://python-markdown.github.io/extensions/api/
-                new_latex = new_latex.replace("<em>", "_")
-                new_latex = new_latex.replace("</em>", "")
-                s = s.replace(f"$${latex}$$", f"\\[{new_latex}\\]")
-
-            # single line
-            sl_latex = re.findall(r"\$(.*?)\$", s)
-            for latex in sl_latex:
-                new_latex = latex.replace("}}", "} }")
-                new_latex = new_latex.replace("<em>", "_")
-                new_latex = new_latex.replace("</em>", "")
-                s = s.replace(f"${latex}$", f"\\({new_latex}\\)")
 
             # process images
             images = re.findall(r'<img .*alt="(.*)".*src="(.*?)"', s)
