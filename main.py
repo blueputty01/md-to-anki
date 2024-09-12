@@ -54,11 +54,13 @@ def parse_markdown(content, deck_name, tags, media_root):
                 s = s.replace(f"${latex}$", f"\\({new_latex}\\)")
 
             # process images
-            images = re.findall(r'<img src="(.*?)"', s)
+            images = re.findall(r'<img .*alt="(.*)".*src="(.*?)"', s)
 
-            for image in images:
+            for img_match in images:
+                # todo replace alt with size of image
+                alt, src = img_match
                 image_path = os.path.join(
-                    media_root, unquote(image).replace("/", os.sep)
+                    media_root, unquote(src).replace("/", os.sep)
                 )
                 _, ext = os.path.splitext(image_path)
 
@@ -67,7 +69,7 @@ def parse_markdown(content, deck_name, tags, media_root):
 
                 anki.send_media({"filename": filename, "path": image_path})
 
-                s = s.replace(image, filename)
+                s = s.replace(src, filename)
 
             return s.strip("\n")
 
