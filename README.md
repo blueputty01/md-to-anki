@@ -25,8 +25,16 @@ IGNORE_KEYWORDS = "discussion"
 OUTPUT_DIR = ""
 ```
 
-3. Run `main.py` using one of the runner files based on your operating system, with modifications based on the markdown
-   file location.
+3. Suggested: set up virtual environment and install dependencies
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+4. Suggested: set up runners for the `main.py` file. See examples/runners for examples for most operating systems. These
+   are useful when for me to run md-to-anki from macOS Spotlight and the equivalent on Windows/Linux
 
 ## Features ⚒️
 
@@ -86,7 +94,7 @@ This text is in the extra field
 ---
 
 This is another card; **this text will be marked for cloze**.
-    This line is in the extra field.
+This line is in the extra field.
 
 ```
 
@@ -98,11 +106,16 @@ Text:
 Extra:
 
 > * Land Ordinance Act of 1785
->   * allowed federal government to sell western lands
->   * pay off national debt
+    >
+
+* allowed federal government to sell western lands
+
+> * pay off national debt
 >   * organize new lands into townships and public schools
 > * Northwest Ordinance of 1787
->  * provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
+    >
+
+* provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
 
 # How it works 🛠️
 
