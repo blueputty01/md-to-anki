@@ -1,5 +1,5 @@
 if __name__ == "__main__":
-    if __package__ is None:
+    if __package__ is None or True:
         import sys
         from os import path
         sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )

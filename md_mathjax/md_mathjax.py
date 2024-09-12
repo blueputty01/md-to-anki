@@ -28,23 +28,12 @@ class MathJaxInlinePattern(InlineProcessor):
     """
     """
 
-    def __init__(self, pattern, tag, extension):
+    def __init__(self, pattern, extension):
         super().__init__(pattern)
         self.extension = extension
-        self.tag = tag
 
     def handleMatch(self, m, data):
-        el = ET.Element(self.tag)
-        el.set('class', self.extension.getConfig('tag_class'))
-
-        if self.tag == 'div':
-            el.text = '$$' + m.group('math') + '$$'
-        else:
-            el.text = '$' + m.group('math') + '$'
-
-        self.extension.mathjax_needed = True
-
-        return el, m.start(0), m.end(0)
+        return '\(' + m.group('math') + '\)', m.start(0), m.end(0)
 
 
 class Md4MathjaxExtension(Extension):
@@ -87,23 +76,23 @@ class Md4MathjaxExtension(Extension):
         mathjax_display_regex2 = r'\\\[(?P<math>.+?)\\\]'
 
         md.inlinePatterns.register(
-            MathJaxInlinePattern(mathjax_inline_regex1, 'span', self),
+            MathJaxInlinePattern(mathjax_inline_regex1, self),
             'mathjax_inlined1', 184)
 
         # must higher than 180 for before the markdown EscapeInlineProcessor
         # and must lower than mathjax_inlined1
         md.inlinePatterns.register(
-            MathJaxInlinePattern(mathjax_inline_regex2, 'span', self),
+            MathJaxInlinePattern(mathjax_inline_regex2, self),
             'mathjax_inlined2', 183)
 
         md.inlinePatterns.register(
-            MathJaxInlinePattern(mathjax_display_regex1, 'div', self),
+            MathJaxInlinePattern(mathjax_display_regex1, self),
             'mathjax_displayed1', 182)
 
         # must higher than 180 for before the markdown EscapeInlineProcessor
         # and must lower than mathjax_inlined1
         md.inlinePatterns.register(
-            MathJaxInlinePattern(mathjax_display_regex2, 'div', self),
+            MathJaxInlinePattern(mathjax_display_regex2, self),
             'mathjax_displayed', 181)
 
 
