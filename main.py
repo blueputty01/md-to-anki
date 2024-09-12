@@ -2,7 +2,9 @@ import os
 import sys
 import re
 
-import markdown2
+import markdown
+from markdown.extensions import codehilite, fenced_code
+
 from urllib.parse import unquote
 
 from rich.console import Console
@@ -17,49 +19,39 @@ from deckConsts import DECKS, OUTPUT_DIR, IGNORE_KEYWORDS
 
 def parse_markdown(content, deck_name, tags, media_root):
     def create_card(t, e, base_tags, heading_tags):
+        BOLD_TAGS = ("<strong>", "</strong>")
+
         def process(raw_string):
+            nonlocal BOLD_TAGS
             raw_string = raw_string.strip()
 
-            s = markdown2.markdown(
+            s = markdown.markdown(
                 raw_string,
-                extras={
-                    "breaks": {"on_newline": True, "on_backslash": True},
-                    # Allows a code block to not have to be indented by fencing it with '```' on a line before and after
-                    # Based on http://github.github.com/github-flavored-markdown/ with support for syntax highlighting.
-                    "fenced-code-blocks": None,
-                    # tables: Tables using the same format as GFM and PHP-Markdown Extra.
-                    "tables": None,
-                    # cuddled-lists: Allow lists to be cuddled to the preceding paragraph.
-                    "cuddled-lists": None,
-                    # code-friendly: The code-friendly extra disables the use of leading, trailing and
-                    # --most importantly-- intra-word emphasis (<em>) and strong (<strong>)
-                    # using single or double underscores, respectively.
-                    "code-friendly": None,
-                    # footnotes: support footnotes as in use on daringfireball.net and implemented in other
-                    # Markdown processors (tho not in Markdown.pl v1.0.1).
-                    "footnotes": None,
-                    # smarty-pants: Fancy quote, em-dash and ellipsis handling similar to
-                    # http://daringfireball.net/projects/smartypants/. See old issue 42 for discussion.
-                    "smarty-pants": None,
-                    # target-blank-links: Add target="_blank" to all <a> tags with an href.
-                    # This causes the link to be opened in a new tab upon a click.
-                    "target-blank-links": None,
-                }
+                extensions=[
+                    codehilite.CodeHiliteExtension(),
+                    fenced_code.FencedCodeExtension(),
+                ]
             )
             s = s.replace("<p>", "").replace("</p>", "")
 
             # process latex. must happen after markdown conversion as markdown2 consumes backslash
             # multi-line
-            ml_latex = re.findall(r"\$\$(.*?)\$\$", raw_string)
+            ml_latex = re.findall(r"\$\$(.*?)\$\$", s)
             for latex in ml_latex:
                 new_latex = latex.replace("}}", "} }")
-                raw_string = raw_string.replace(f"$${latex}$$", f"\\[{new_latex}\\]")
+                # todo this would be cleaner as an extension to the markdown package
+                # https://python-markdown.github.io/extensions/api/
+                new_latex = new_latex.replace("<em>", "_")
+                new_latex = new_latex.replace("</em>", "")
+                s = s.replace(f"$${latex}$$", f"\\[{new_latex}\\]")
 
             # single line
-            sl_latex = re.findall(r"\$(.*?)\$", raw_string)
+            sl_latex = re.findall(r"\$(.*?)\$", s)
             for latex in sl_latex:
                 new_latex = latex.replace("}}", "} }")
-                raw_string = raw_string.replace(f"${latex}$", f"\\({new_latex}\\)")
+                new_latex = new_latex.replace("<em>", "_")
+                new_latex = new_latex.replace("</em>", "")
+                s = s.replace(f"${latex}$", f"\\({new_latex}\\)")
 
             # process images
             images = re.findall(r'<img src="(.*?)"', s)
@@ -84,7 +76,7 @@ def parse_markdown(content, deck_name, tags, media_root):
 
         # process clozes
         cloze_id = 1
-        bold_matches = re.findall(r"<strong>(.*?)</strong>", t)
+        bold_matches = re.findall(fr"{BOLD_TAGS[0]}(.*?){BOLD_TAGS[1]}", t)
         for bold_text in bold_matches:
             cloze_text = bold_text
             if not re.match(r"^\d+::.*", bold_text):
@@ -92,7 +84,7 @@ def parse_markdown(content, deck_name, tags, media_root):
                 cloze_id += 1
             cloze_text = f"{{{{c{cloze_text}}}}}"
 
-            t = t.replace(f"<strong>{bold_text}</strong>", cloze_text)
+            t = t.replace(f"{BOLD_TAGS[0]}{bold_text}{BOLD_TAGS[1]}", cloze_text)
 
         if len(heading_tags) > 0:
             heading_tag = "::".join(heading_tags)
@@ -284,7 +276,9 @@ def main():
                     except anki.AnkiError as e:
                         # progress.console.print_exception()
                         for i, item in enumerate(all_cards):
-                            progress.console.print(f"{item["fields"]["Text"]}\n\t{item["fields"]["Extra"]}", style='bold red' if e.result is None or e.result[i] is None else 'bold green')
+                            progress.console.print(f'{item["fields"]["Text"]}\n\t{item["fields"]["Extra"]}',
+                                                   style='bold red' if e.result is None or e.result[
+                                                       i] is None else 'bold green')
                             progress.console.print("\n----------\n\n")
                         progress.console.print(e.result)
                         progress.console.print(e.e)
