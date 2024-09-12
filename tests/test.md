@@ -6,6 +6,11 @@ $**\lim_{x \rightarrow \infty} \frac{f(x)}{g(x)} \neq \infty \implies f(x)** = O
 $**\lim_{x \rightarrow \infty} \frac{f(x)}{g(x)} \neq 0 \implies f(x)** = \Omega(g(x))$
 $**\lim_{x \rightarrow \infty} \frac{f(x)}{g(x)} \neq 0, \infty \implies f(x)** = \theta(g(x))$
 
+$\operatorname*{lim}_{t\to t_{0}}(\mathbf{F}+\mathbf{G})(t)=**\operatorname*{lim}_{t\to t_{0}}\mathbf{F}(t)+\operatorname*{lim}_{t\to t_{0}}\mathbf{G}(t)**$
+$\operatorname*{lim}_{t\rightarrow t_{0}}f F(t)=**\operatorname*{lim}_{t\rightarrow t_{0}}f(t)\operatorname*{lim}_{t\rightarrow t_{0}}\operatorname{F}(t)**$
+$\operatorname*{lim}_{t\rightarrow t_{0}}\left(\mathbf{F}\cdot\mathbf{G}\right)(t)=**\operatorname*{lim}_{t\rightarrow t_{0}}\mathbf{F}(t)\cdot\operatorname*{lim}_{t\rightarrow t_{0}}\mathbf{G}(t)**$
+$\operatorname*{lim}_{t\rightarrow t_{0}}\left({\bf F}\times{\bf G}\right)(t)=**\operatorname*{lim}_{t\rightarrow t_{0}}{\bf F}(t)\times\operatorname*{lim}_{t\rightarrow t_{\alpha}}{\bf G}(t)**$
+$\operatorname*{lim}_{s\to s_{0}}(\mathbf{F}\circ g)(s)=**\operatorname*{lim}_{t\to t_{0}}\mathbf{F}(t)**$ if $g(s) \neq t_0$ for all $s$ in an open interval about $s_0$
 
 Depth first tree traversal implementation (general tree):
 {{c1::

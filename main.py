@@ -33,22 +33,24 @@ def parse_markdown(content, deck_name, tags, media_root):
                 ]
             )
             s = s.replace("<p>", "").replace("</p>", "")
-            # # middle-word-em also ignores bold notation within latex, so we need to manually add that back
-            # bolds = re.findall(r"\*\*(.*?)\*\*", s)
-            # for bold in bolds:
-            #     s = s.replace(f"**{bold}**", f"{BOLD_TAGS[0]}{bold}{BOLD_TAGS[1]}")
 
             # process latex. must happen after markdown conversion as markdown2 consumes backslash
             # multi-line
             ml_latex = re.findall(r"\$\$(.*?)\$\$", s)
             for latex in ml_latex:
                 new_latex = latex.replace("}}", "} }")
+                # todo this would be cleaner as an extension to the markdown package
+                # https://python-markdown.github.io/extensions/api/
+                new_latex = new_latex.replace("<em>", "_")
+                new_latex = new_latex.replace("</em>", "")
                 s = s.replace(f"$${latex}$$", f"\\[{new_latex}\\]")
 
             # single line
             sl_latex = re.findall(r"\$(.*?)\$", s)
             for latex in sl_latex:
                 new_latex = latex.replace("}}", "} }")
+                new_latex = new_latex.replace("<em>", "_")
+                new_latex = new_latex.replace("</em>", "")
                 s = s.replace(f"${latex}$", f"\\({new_latex}\\)")
 
             # process images
