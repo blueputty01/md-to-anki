@@ -243,7 +243,7 @@ def main():
             console.print(f" --- [blue]{deck_path}[/blue] --- ")
 
             for root, _, files in os.walk(deck_directory):
-                task = progress.add_task(f"[green][bold]{deck_path}", total=len(files))
+                task = progress.add_task(f"[green][bold]{deck_path}", total=len(files) - 1)
 
                 # Process each note file in the current deck directory
                 for file in files:
