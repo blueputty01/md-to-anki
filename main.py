@@ -231,27 +231,25 @@ def process_file(root, deck_name, deck_directory, file_path):
 def main():
     console = Console()
 
-    # status = console.status("Initializing")
     with Progress(console=console, transient=True) as progress:
-        # with Live(Group( progress, status)):
         task = None
 
         # iterate over the specified deck names and directories
         for deck_path, deck_directory in DECKS.items():
+            # 'task' is a whole progress bar -- remove old ones and only show the current one while processing
             if task is not None:
                 progress.remove_task(task)
 
             console.print(f" --- [blue]{deck_path}[/blue] --- ")
 
             for root, _, files in os.walk(deck_directory):
-                task = progress.add_task(f"[green][bold]{deck_path}", total=len(files))
+                task = progress.add_task(f"[green][bold]{deck_path}", total=len(files) - 1)
 
                 # Process each note file in the current deck directory
                 for file in files:
                     if root.split(os.sep)[-1].startswith(IGNORE_KEYWORDS):
                         print(f"Skipping {file}")
                         continue
-                    # status.update(f"{file} -- Parsing")
 
                     # Process only Markdown files and ignore files starting with '_'
                     if file.startswith("_") or not file.endswith(".md"):
@@ -260,7 +258,6 @@ def main():
 
                     file_path = os.path.join(root, file)
                     try:
-                        # status.update(f"{file} -- Processing file contents")
                         all_cards = process_file(
                             root, deck_path, deck_directory, file_path
                         )
@@ -270,19 +267,14 @@ def main():
                             continue
 
                         # import cards using AnkiConnect api
-                        # status.update(f"{file} -- Sending")
-                        console.print(f"[bold]{file}[/bold]")
+                        console.print(f"[bold]Processing {file}[/bold]")
                         rejected = anki.send_notes(console, all_cards)
-
-                        # status.update(f"{file} -- Sent!")
                     except anki.AnkiError as e:
-                        # progress.console.print_exception()
                         for i, item in enumerate(all_cards):
                             progress.console.print(f'{item["fields"]["Text"]}\n\t{item["fields"]["Extra"]}',
                                                    style='bold red' if e.result is None or e.result[
                                                        i] is None else 'bold green')
                             progress.console.print("\n----------\n\n")
-                        progress.console.print(e.result)
                         progress.console.print(e.e)
 
                         sys.exit(1)
@@ -319,3 +311,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
