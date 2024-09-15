@@ -125,3 +125,5 @@ processed. If the file has already been processed, it will be skipped.
 # Contributing 🤝
 
 Feel free to contribute to this project by opening an issue or creating a pull request!
+
+If adding a package, please run `python3 -m  pipreqs.pipreqs . --force`
