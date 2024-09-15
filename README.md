@@ -113,9 +113,7 @@ Extra:
 > * pay off national debt
 >   * organize new lands into townships and public schools
 > * Northwest Ordinance of 1787
-    >
-
-* provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
+> * provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
 
 # How it works 🛠️
 
