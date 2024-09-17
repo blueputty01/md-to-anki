@@ -61,7 +61,7 @@ def md_to_html(raw_string: str) -> str:
         ],
     )
 
-    return s.replace("\n", "")
+    return s.strip("\n")
 
 
 def process_field(

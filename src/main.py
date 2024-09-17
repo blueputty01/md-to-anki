@@ -50,8 +50,8 @@ def process_file(
     for card in parsed_cards:
         text = card.text
 
-        if not re.match(r"{{c\d+::", text):
-            unclozed_cards.append(card)
+        if not re.search(r"\{\{c\d+::", text):
+            unclozed_cards.append((text, card.extra))
             continue
 
         if card.tags and len(card.tags) > 0:
