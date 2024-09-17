@@ -15,7 +15,7 @@ from deckConsts import DECKS, IGNORE_KEYWORDS
 
 def process_file(
     root: Path, deck_name: str, deck_directory: str, file_path: str
-) -> tuple[list[dict[str, Collection[str]]], list[dict[str, object]]]:
+) -> tuple[list[dict[str, Collection[str]]], list[dict[str, str]]]:
     """Returns tuple representing payload for cards and images to be imported to Anki"""
 
     with open(file_path, "r", encoding="utf-8") as f:
@@ -93,13 +93,16 @@ def main():
         task = None
 
         for deck_path, deck_directory in DECKS.items():
+            # 'task' is a whole progress bar -- remove old ones and only show the current one while processing
             if task is not None:
                 progress.remove_task(task)
 
             console.print(f" --- [blue]{deck_path}[/blue] --- ")
 
             for root, _, files in os.walk(deck_directory):
-                task = progress.add_task(f"[green][bold]{deck_path}", total=len(files))
+                task = progress.add_task(
+                    f"[green][bold]{deck_path}", total=len(files) - 1
+                )
 
                 for file in files:
                     if root.split(os.sep)[-1].startswith(IGNORE_KEYWORDS):
@@ -130,7 +133,7 @@ def main():
                             console.print(f"Uploading {image['filename']} to Anki")
                             anki.send_media(image)
 
-                    console.print(f"[bold]{file}[/bold]")
+                    console.print(f"[bold]Processing {file}[/bold]")
 
                     try:
                         anki.send_notes(all_cards)

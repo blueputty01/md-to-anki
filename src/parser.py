@@ -26,9 +26,7 @@ def remove_paragraph_tags(soup: bs4.BeautifulSoup) -> None:
         tag.unwrap()
 
 
-def process_images(
-    soup: bs4.BeautifulSoup, media_root: Path
-) -> list[dict[str, object]]:
+def process_images(soup: bs4.BeautifulSoup, media_root: Path) -> list[dict[str, str]]:
     images = soup.find_all("img")
     media_to_post = []
     for img in images:
@@ -68,7 +66,7 @@ def md_to_html(raw_string: str) -> str:
 
 def process_field(
     raw_string: str, root: Path
-) -> tuple[bs4.BeautifulSoup, list[dict[str, object]]]:
+) -> tuple[bs4.BeautifulSoup, list[dict[str, str]]]:
     s = md_to_html(raw_string)
 
     soup = bs4.BeautifulSoup(s, "html.parser")
@@ -82,14 +80,14 @@ class Card:
     text: str
     extra: str
     tags: Optional[list[str]]
-    images: Optional[list[dict[str, object]]]
+    images: Optional[list[dict[str, str]]]
 
     def __init__(
         self,
         text: str,
         extra: str,
         tags: Optional[list[str]] = None,
-        images: Optional[list[dict[str, object]]] = None,
+        images: Optional[list[dict[str, str]]] = None,
     ):
         self.text = text
         self.extra = extra
@@ -97,9 +95,7 @@ class Card:
         self.images = images
 
 
-def process_fields(
-    t: str, e: str, root: Path
-) -> tuple[str, str, list[dict[str, object]]]:
+def process_fields(t: str, e: str, root: Path) -> tuple[str, str, list[dict[str, str]]]:
     text_field, t_img = process_field(t, root)
     extra_field, e_img = process_field(e, root)
 

@@ -23,4 +23,4 @@ jobs:
           pip install mypy
       - name: mypy
         run: |
-          mypy md_to_anki/main.py
+          mypy

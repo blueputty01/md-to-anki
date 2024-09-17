@@ -106,14 +106,11 @@ Text:
 Extra:
 
 > * Land Ordinance Act of 1785
-    >
-
-* allowed federal government to sell western lands
-
-> * pay off national debt
+>   * allowed federal government to sell western lands
+>   * pay off national debt
 >   * organize new lands into townships and public schools
 > * Northwest Ordinance of 1787
-> * provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
+>   * provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
 
 # How it works 🛠️
 
@@ -124,7 +121,7 @@ processed. If the file has already been processed, it will be skipped.
 
 Feel free to contribute to this project by opening an issue or creating a pull request!
 
-If adding a package, please run `python3 -m  pipreqs.pipreqs . --force` to update the requirements.txt file.
+If adding a package, please run ` pip freeze > requirements.txt` to update the requirements.txt file.
 
-Please ensure that code is typed properly with `mypy md_to_anki/main.py`
+Please ensure that code is typed properly with `mypy`
 
