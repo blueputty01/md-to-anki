@@ -10,8 +10,7 @@ import parser
 from utils import anki
 from utils import utils
 
-# type: ignore
-from deckConsts import DECKS, IGNORE_KEYWORDS
+from deckConsts import DECKS, IGNORE_KEYWORDS  # type: ignore
 
 
 def process_file(
