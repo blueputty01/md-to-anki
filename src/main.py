@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Collection
 from pathlib import Path
 
@@ -44,7 +45,15 @@ def process_file(
 
     cards_payload = []
     images_payload = []
+
+    unclozed_cards = []
     for card in parsed_cards:
+        text = card.text
+
+        if not re.match(r"{{c\d+::", text):
+            unclozed_cards.append(card)
+            continue
+
         if card.tags and len(card.tags) > 0:
             heading_tag = "::".join(card.tags)
             new_tags = [f"{tag}::{heading_tag}" for tag in base_tags]
@@ -70,6 +79,9 @@ def process_file(
             },
         }
         cards_payload.append(single_card_payload)
+
+    if unclozed_cards:
+        raise ValueError("Some cards are not clozed: " + str(unclozed_cards))
 
     return cards_payload, images_payload
 
@@ -99,23 +111,29 @@ def main():
                         continue
 
                     file_path = os.path.join(root, file)
+
                     try:
                         all_cards, all_images = process_file(
                             root, deck_path, deck_directory, str(file_path)
                         )
+                    except ValueError as e:
+                        console.print(f"Error processing {file}: {e}")
+                        progress.advance(task)
+                        continue
 
-                        if len(all_cards) == 0:
-                            progress.advance(task)
-                            continue
+                    if len(all_cards) == 0:
+                        progress.advance(task)
+                        continue
 
-                        if all_images:
-                            for image in all_images:
-                                console.print(f"Uploading {image['filename']} to Anki")
-                                anki.send_media(image)
+                    if all_images:
+                        for image in all_images:
+                            console.print(f"Uploading {image['filename']} to Anki")
+                            anki.send_media(image)
 
-                        console.print(f"[bold]{file}[/bold]")
+                    console.print(f"[bold]{file}[/bold]")
+
+                    try:
                         anki.send_notes(all_cards)
-
                     except anki.AnkiError as e:
                         for i, item in enumerate(all_cards):
                             style = (
