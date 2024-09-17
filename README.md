@@ -50,7 +50,7 @@ All notes are imported to the cloze type. Any bold text, notated by markdown `**
 fields.
 
 By default, cloze fields will be numbered in the order they appear in the note. To manually number cloze fields, use
-`{{c#::text}}`. The automatic counting will be reset to the number following the `#`.
+`{{c#::text}}`. The automatic counting does not increment in this case.
 
 ## New card syntax
 
@@ -124,4 +124,7 @@ processed. If the file has already been processed, it will be skipped.
 
 Feel free to contribute to this project by opening an issue or creating a pull request!
 
-If adding a package, please run `python3 -m  pipreqs.pipreqs . --force`
+If adding a package, please run `python3 -m  pipreqs.pipreqs . --force` to update the requirements.txt file.
+
+Please ensure that code is typed properly with `mypy md_to_anki/main.py`
+
