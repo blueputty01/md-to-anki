@@ -1,0 +1,20 @@
+[
+    {
+        "deckName": "temp",
+        "modelName": "cloze",
+        "fields": {
+            "Text": "Hello\n{{c1::\nthis is a\nmulti-line\ncloze\n}}",
+            "Extra": ""
+        },
+        "tags": "#delete",
+        "options": {
+            "allowDuplicate": false,
+            "duplicateScope": "temp",
+            "duplicateScopeOptions": {
+                "deckName": "temp",
+                "checkChildren": false,
+                "checkAllModels": false
+            }
+        }
+    }
+]

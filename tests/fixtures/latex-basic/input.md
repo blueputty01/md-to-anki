@@ -1,0 +1,2 @@
+A **vector-valued** function consists of two parts: a **domain**, which is a collection of numbers, and a **2::rule**, which assigns to each number in the domain one and only one vector.
+$\mathbf{F}(t)=f_{1}(t)\mathbf{i}+f_{2}(t)\mathbf{j}+f_{3}(t)\mathbf{k}$

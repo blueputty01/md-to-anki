@@ -1,0 +1,20 @@
+[
+    {
+        "deckName": "temp",
+        "modelName": "cloze",
+        "fields": {
+            "Text": "Depth first tree traversal implementation (general tree):\n{{c1::\n<div class=\"codehilite\"><pre><span></span><code><span class=\"k\">def</span> <span class=\"nf\">fooHelper</span><span class=\"p\">(</span><span class=\"n\">localRoot</span><span class=\"p\">):</span>\n    <span class=\"n\">visit</span> <span class=\"n\">localRoot</span><span class=\"o\">.</span><span class=\"n\">data</span>\n    <span class=\"k\">for</span> <span class=\"n\">child</span> <span class=\"ow\">in</span> <span class=\"n\">localRoot</span><span class=\"o\">.</span><span class=\"n\">children</span><span class=\"p\">:</span>\n        <span class=\"n\">fooHelper</span><span class=\"p\">(</span><span class=\"n\">child</span><span class=\"p\">)</span>\n</code></pre></div>\n\n}}",
+            "Extra": ""
+        },
+        "tags": "#delete",
+        "options": {
+            "allowDuplicate": false,
+            "duplicateScope": "temp",
+            "duplicateScopeOptions": {
+                "deckName": "temp",
+                "checkChildren": false,
+                "checkAllModels": false
+            }
+        }
+    }
+]

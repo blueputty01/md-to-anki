@@ -1,0 +1,20 @@
+[
+    {
+        "deckName": "temp",
+        "modelName": "cloze",
+        "fields": {
+            "Text": "A {{c1::vector-valued}} function consists of two parts: a {{c2::domain}}, which is a collection of numbers, and a {{c2::rule}}, which assigns to each number in the domain one and only one vector.\n\\(\\mathbf{F}(t)=f_{1}(t)\\mathbf{i}+f_{2}(t)\\mathbf{j}+f_{3}(t)\\mathbf{k}\\)",
+            "Extra": ""
+        },
+        "tags": "#delete",
+        "options": {
+            "allowDuplicate": false,
+            "duplicateScope": "temp",
+            "duplicateScopeOptions": {
+                "deckName": "temp",
+                "checkChildren": false,
+                "checkAllModels": false
+            }
+        }
+    }
+]
