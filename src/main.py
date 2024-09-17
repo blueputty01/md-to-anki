@@ -10,6 +10,7 @@ import parser
 from utils import anki
 from utils import utils
 
+# type: ignore
 from deckConsts import DECKS, IGNORE_KEYWORDS
 
 
