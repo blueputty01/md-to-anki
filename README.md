@@ -39,9 +39,9 @@ pip install -r requirements.txt
 ## Features ⚒️
 
 * LaTeX support via MathJax
-* Cloze deletion
+* Cloze deletion (both inside and outside MathJax)
 * Syntax highlighting (must set up [pygments.css](https://github.com/richleland/pygments-css) in Anki card styles)
-* Images
+* Images (supports Obsidian `[|size](path-to-image.png)` syntax for image size)
 * Uses [anki-connect](https://github.com/FooSoft/anki-connect#media-actions) to automatically add parsed data to Anki
 
 ## Cloze deletion syntax
