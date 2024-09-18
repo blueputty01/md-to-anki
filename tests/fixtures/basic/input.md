@@ -1,0 +1,1 @@
+A **vector-valued** function consists of two parts: a **domain**, which is a collection of numbers, and a **2::rule**, which assigns to each number in the domain one and only one vector.

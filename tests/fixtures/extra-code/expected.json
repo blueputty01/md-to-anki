@@ -1,0 +1,20 @@
+[
+    {
+        "deckName": "temp",
+        "modelName": "cloze",
+        "fields": {
+            "Text": "Post-order traversal:\n{{c1::4 5 2 6 7 3 1}}",
+            "Extra": "<div class=\"codehilite\"><pre><span></span><code><span class=\"n\">visit</span> <span class=\"n\">node</span><span class=\"o\">.</span><span class=\"n\">data</span>\n<span class=\"n\">recurse</span><span class=\"p\">(</span><span class=\"n\">left</span><span class=\"p\">)</span>\n<span class=\"n\">recurse</span><span class=\"p\">(</span><span class=\"n\">right</span><span class=\"p\">)</span>\n</code></pre></div>"
+        },
+        "tags": "#delete",
+        "options": {
+            "allowDuplicate": false,
+            "duplicateScope": "temp",
+            "duplicateScopeOptions": {
+                "deckName": "temp",
+                "checkChildren": false,
+                "checkAllModels": false
+            }
+        }
+    }
+]

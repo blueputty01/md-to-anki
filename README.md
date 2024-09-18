@@ -39,9 +39,9 @@ pip install -r requirements.txt
 ## Features ⚒️
 
 * LaTeX support via MathJax
-* Cloze deletion
+* Cloze deletion (both inside and outside MathJax)
 * Syntax highlighting (must set up [pygments.css](https://github.com/richleland/pygments-css) in Anki card styles)
-* Images
+* Images (supports Obsidian `[|size](path-to-image.png)` syntax for image size)
 * Uses [anki-connect](https://github.com/FooSoft/anki-connect#media-actions) to automatically add parsed data to Anki
 
 ## Cloze deletion syntax
@@ -50,7 +50,7 @@ All notes are imported to the cloze type. Any bold text, notated by markdown `**
 fields.
 
 By default, cloze fields will be numbered in the order they appear in the note. To manually number cloze fields, use
-`{{c#::text}}`. The automatic counting will be reset to the number following the `#`.
+`{{c#::text}}`. The automatic counting does not increment in this case.
 
 ## New card syntax
 
@@ -106,16 +106,11 @@ Text:
 Extra:
 
 > * Land Ordinance Act of 1785
-    >
-
-* allowed federal government to sell western lands
-
-> * pay off national debt
+>   * allowed federal government to sell western lands
+>   * pay off national debt
 >   * organize new lands into townships and public schools
 > * Northwest Ordinance of 1787
-    >
-
-* provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
+>   * provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
 
 # How it works 🛠️
 
@@ -125,3 +120,8 @@ processed. If the file has already been processed, it will be skipped.
 # Contributing 🤝
 
 Feel free to contribute to this project by opening an issue or creating a pull request!
+
+If adding a package, please run ` pip freeze > requirements.txt` to update the requirements.txt file.
+
+Please ensure that code is typed properly with `mypy`
+

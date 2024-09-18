@@ -1,9 +1,12 @@
 import hashlib
 import os
+from pathlib import Path
 
-def hash_file(path):
-    BUFF_SIZE = 65536  # read in 64kb chunks
+# read in 64kb chunks
+BUFF_SIZE = 65536
 
+
+def hash_file(path: str | Path) -> str:
     sha1 = hashlib.sha1()
     with open(path, "rb") as f:
         while True:
@@ -14,7 +17,8 @@ def hash_file(path):
 
     return sha1.hexdigest()
 
-def string_to_tag(s):
+
+def string_to_tag(s: str) -> str:
     # remove leading/trailing slashes
     tag_path = s.strip(os.sep)
     # replace slashes with double colons
@@ -23,4 +27,3 @@ def string_to_tag(s):
     tag_path = tag_path.replace(" ", "")
     # replace dashes with sub tag
     return tag_path.replace("-", "::")
-

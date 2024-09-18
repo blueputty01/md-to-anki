@@ -8,13 +8,13 @@ class AnkiError(Exception):
         self.e = e
         self.result = result
 
+
 def request(action, **params):
     return {"action": action, "params": params, "version": 6}
 
 
 def invoke(action, **params):
     request_json = json.dumps(request(action, **params)).encode("utf-8")
-    # print(request_json)
 
     a_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -22,7 +22,6 @@ def invoke(action, **params):
     result_of_check = a_socket.connect_ex(location)
 
     if result_of_check == 0:
-        # print("Port is open")
         response = json.load(
             urllib.request.urlopen(
                 urllib.request.Request("http://localhost:8765", request_json)
@@ -37,38 +36,25 @@ def invoke(action, **params):
             raise ValueError("response is missing required result field")
         if response["error"] is not None:
             raise AnkiError(response["error"], response["result"])
+
         return response["result"]
     else:
-        print("Port is closed")
-        return None
+        raise AnkiError(
+            "AnkiConnect is not running. Please start Anki and try again.", []
+        )
 
 
-def send_notes(console, notes):
+def send_notes(notes) -> None:
     result = invoke("addNotes", notes=notes)
 
-    if result is None:
-        raise AnkiError("AnkiConnect is not running. Please start Anki and try again.", [])
-
     rejected = []
-
-    total = len(notes)
     for j, note in enumerate(notes):
         if result is None or result[j] is None:
             rejected.append(f'{note["fields"]} under {note["deckName"]}')
 
-    rej_count = len(rejected)
-    color = "red" if rej_count > 0 else "green"
-    console.print(
-        f"[{color}]{total - rej_count} / {total}[/{color}] notes were successfully added to Anki."
-    )
-    if rej_count > 0:
-        console.print("The following notes were rejected by Anki:")
-        console.print(*rejected, sep="\n")
-        return rejected
-    return []
+    if rejected:
+        raise AnkiError("Some notes were rejected by Anki", result)
 
 
-def send_media(media):
-    print("Sending media")
+def send_media(media) -> None:
     invoke("storeMediaFile", **media)
-    # print("Action complete")
