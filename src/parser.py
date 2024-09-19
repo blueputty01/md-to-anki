@@ -40,8 +40,8 @@ def process_images(soup: bs4.BeautifulSoup, media_root: Path) -> list[dict[str, 
 
         alt_size = re.match(r"^\|(\d+)", alt)
         if alt_size:
-            img["width"] = str(int(alt_size.group(1)) / REM_CONVERSION) + "rem"
-            img["height"] = "auto"
+            width_val = str(int(alt_size.group(1)) / REM_CONVERSION) + "rem"
+            img["style"] = f"width: {width_val}; height: auto;"
 
         img["src"] = filename
         img["alt"] = ""
