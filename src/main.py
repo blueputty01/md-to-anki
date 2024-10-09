@@ -105,7 +105,7 @@ def main():
                 )
 
                 for file in files:
-                    if root.split(os.sep)[-1].startswith(IGNORE_KEYWORDS):
+                    if root.split(os.sep)[-1] in IGNORE_KEYWORDS:
                         print(f"Skipping {file}")
                         continue
 
