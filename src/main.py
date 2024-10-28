@@ -169,7 +169,6 @@ def main():
 
                         continue
 
-                    # TODO: fix multi-write of end delimiter on force
                     with open(file_path, "a+", encoding="utf-8") as f:
                         f.write("\n***\n")
 
