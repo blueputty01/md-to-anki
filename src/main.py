@@ -13,6 +13,8 @@ from utils import utils
 
 from deckConsts import DECKS, IGNORE_KEYWORDS  # type: ignore
 
+DELIMITER = "***"
+
 
 def process_file(
     root: Path, deck_name: str, deck_directory: str, file_path: str, force: bool
@@ -25,14 +27,14 @@ def process_file(
     content = parser.remove_yaml(content)
 
     if not force:
-        if content.rstrip("\n ").endswith("***"):
+        if content.rstrip("\n ").endswith(DELIMITER):
             return [], []
 
-        if "***" in content:
-            imported_parts = content.split("***")
+        if DELIMITER in content:
+            imported_parts = content.split(DELIMITER)
             content = imported_parts[-1]
     else:
-        content = content.replace("***", "")
+        content = content.replace(DELIMITER, "")
 
     tag = "#"
     tag += "::#".join(deck_name.replace(" ", "").split("::"))
