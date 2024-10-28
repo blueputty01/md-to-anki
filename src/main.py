@@ -6,6 +6,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.progress import Progress
 
+import argparse
 import parser
 from utils import anki
 from utils import utils
@@ -14,7 +15,7 @@ from deckConsts import DECKS, IGNORE_KEYWORDS  # type: ignore
 
 
 def process_file(
-    root: Path, deck_name: str, deck_directory: str, file_path: str
+        root: Path, deck_name: str, deck_directory: str, file_path: str, force: bool
 ) -> tuple[list[dict[str, Collection[str]]], list[dict[str, str]]]:
     """Returns tuple representing payload for cards and images to be imported to Anki"""
 
@@ -23,12 +24,13 @@ def process_file(
 
     content = parser.remove_yaml(content)
 
-    if content.rstrip("\n ").endswith("***"):
-        return [], []
+    if not force:
+        if content.rstrip("\n ").endswith("***"):
+            return [], []
 
-    if "***" in content:
-        imported_parts = content.split("***")
-        content = imported_parts[-1]
+        if "***" in content:
+            imported_parts = content.split("***")
+            content = imported_parts[-1]
 
     tag = "#"
     tag += "::#".join(deck_name.replace(" ", "").split("::"))
@@ -85,17 +87,22 @@ def process_file(
 
     return cards_payload, images_payload
 
+def parse_args():
+    parser = argparse.ArgumentParser(prog="md-to-anki")
+    parser.add_argument('-f', '--force', action='store_true')
+    return parser.parse_args()
 
 def main():
     console = Console()
+    args = parse_args()
 
     with Progress(console=console, transient=True) as progress:
         task = None
 
         for deck_path, deck_directory in DECKS.items():
             # 'task' is a whole progress bar -- remove old ones and only show the current one while processing
-            if task is not None:
-                progress.remove_task(task)
+            # if task is not None:
+                #progress.remove_task(task)
 
             console.print(f" --- [blue]{deck_path}[/blue] --- ")
 
@@ -117,7 +124,7 @@ def main():
 
                     try:
                         all_cards, all_images = process_file(
-                            root, deck_path, deck_directory, str(file_path)
+                            root, deck_path, deck_directory, str(file_path), args.force
                         )
                     except ValueError as e:
                         console.print(f"Error processing {file}: {e}")
@@ -156,6 +163,7 @@ def main():
 
                         continue
 
+                    # TODO: fix multi-write of end delimiter on force
                     with open(file_path, "a+", encoding="utf-8") as f:
                         f.write("\n***\n")
 
