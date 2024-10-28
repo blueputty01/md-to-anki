@@ -152,7 +152,7 @@ def parse_markdown(raw: str, root: Path) -> list[Card]:
             text += "\n"
             continue
 
-        if line.startswith("#"):
+        if line.startswith("#") and not is_building_code:
             heading_indicator, heading = line.split(" ", 1)
             tag = utils.string_to_tag(heading)
             h_level = heading_indicator.count("#")
