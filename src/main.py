@@ -15,7 +15,7 @@ from deckConsts import DECKS, IGNORE_KEYWORDS  # type: ignore
 
 
 def process_file(
-        root: Path, deck_name: str, deck_directory: str, file_path: str, force: bool
+    root: Path, deck_name: str, deck_directory: str, file_path: str, force: bool
 ) -> tuple[list[dict[str, Collection[str]]], list[dict[str, str]]]:
     """Returns tuple representing payload for cards and images to be imported to Anki"""
 
@@ -31,6 +31,8 @@ def process_file(
         if "***" in content:
             imported_parts = content.split("***")
             content = imported_parts[-1]
+    else:
+        content = content.replace("***", "")
 
     tag = "#"
     tag += "::#".join(deck_name.replace(" ", "").split("::"))
@@ -87,10 +89,12 @@ def process_file(
 
     return cards_payload, images_payload
 
+
 def parse_args():
     parser = argparse.ArgumentParser(prog="md-to-anki")
-    parser.add_argument('-f', '--force', action='store_true')
+    parser.add_argument("-f", "--force", action="store_true")
     return parser.parse_args()
+
 
 def main():
     console = Console()
@@ -101,8 +105,8 @@ def main():
 
         for deck_path, deck_directory in DECKS.items():
             # 'task' is a whole progress bar -- remove old ones and only show the current one while processing
-            # if task is not None:
-                #progress.remove_task(task)
+            if task is not None:
+                progress.remove_task(task)
 
             console.print(f" --- [blue]{deck_path}[/blue] --- ")
 
