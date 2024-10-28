@@ -184,7 +184,7 @@ def parse_markdown(raw: str, root: Path) -> list[Card]:
 
         if line == "---":
             if is_building_multiline_extra:
-                extracted_fields.append((text, extra, tag_hierarchy))
+                extracted_fields.append((text, extra, tag_hierarchy.copy()))
                 text = ""
                 extra = ""
                 append = False
@@ -201,7 +201,7 @@ def parse_markdown(raw: str, root: Path) -> list[Card]:
 
         if append:
             if text != "":
-                extracted_fields.append((text, extra, tag_hierarchy))
+                extracted_fields.append((text, extra, tag_hierarchy.copy()))
                 append = False
             text = ""
             extra = ""
