@@ -57,7 +57,7 @@ class Md4MathjaxExtension(Extension):
         # later we will use it
         self.md = md
         # Regex to detect mathjax
-        mathjax_inline_regex1 = r"(?<!\$)\$(?!\$)" r"(?P<math>.+?)" r"(?<!\$)\$(?!\$)"
+        mathjax_inline_regex1 = r"\$(?P<math>[^\$]*?[^ ])\$"
 
         md.inlinePatterns.register(
             MathJaxInlinePattern(mathjax_inline_regex1, self), "mathjax_inlined1", 190
