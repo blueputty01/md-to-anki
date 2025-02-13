@@ -12,6 +12,8 @@ from utils import utils
 
 REM_CONVERSION = 16
 
+EXTRA_INDICATORS = tuple(["\t", " ", "> "])
+
 
 def remove_yaml(content):
     if content.startswith("---"):
@@ -206,9 +208,9 @@ def parse_markdown(raw: str, root: Path) -> list[Card]:
             text = ""
             extra = ""
 
-        if is_building_multiline_extra or line.startswith("\t") or line.startswith(" "):
+        if is_building_multiline_extra or line.startswith(EXTRA_INDICATORS):
             append = False
-            extra += line.lstrip()
+            extra += line.lstrip("".join(EXTRA_INDICATORS))
             extra += "\n"
         else:
             append = False
