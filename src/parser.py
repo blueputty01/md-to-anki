@@ -150,8 +150,7 @@ def parse_markdown(raw: str, root: Path) -> list[Card]:
         line = line.rstrip()
 
         if line.lstrip() == "+":
-            text += "\n"
-            text += "\n"
+            text += "<br>"
             continue
 
         if line.startswith("#") and not is_building_code:
