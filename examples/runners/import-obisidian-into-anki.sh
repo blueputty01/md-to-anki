@@ -15,7 +15,7 @@
 # @raycast.authorURL github.com/blueputty01
 
 # Change the directory to D:
-cd /Users/alexyang/Documents/School/anki/md-to-anki/
+cd /Users/alexyang/Documents/anki/md-to-anki/
 
 # Activate the virtual environment
 source venv/bin/activate
