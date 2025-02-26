@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 # Change the directory to D:
 cd /Users/alexyang/Documents/anki/md-to-anki || exit
