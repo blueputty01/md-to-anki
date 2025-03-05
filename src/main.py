@@ -109,6 +109,7 @@ def main():
             # 'task' is a whole progress bar -- remove old ones and only show the current one while processing
             if task is not None:
                 progress.remove_task(task)
+                task = None
 
             console.print(f" --- [blue]{deck_path}[/blue] --- ")
 
