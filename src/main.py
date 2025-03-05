@@ -131,7 +131,11 @@ def main():
 
                     try:
                         all_cards, all_images = process_file(
-                            root, deck_path, deck_directory, str(file_path), args.force
+                            Path(root),
+                            deck_path,
+                            deck_directory,
+                            str(file_path),
+                            args.force,
                         )
                     except ValueError as e:
                         console.print(f"Error processing {file}: {e}")
