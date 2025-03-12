@@ -4,6 +4,8 @@
 from markdown.inlinepatterns import InlineProcessor
 from markdown.extensions import Extension
 
+# inspired by https://github.com/a358003542/md4mathjax
+
 DEFUALT_MATHJAX_SETTING = r"""
 window.MathJax = {
   tex: {
@@ -23,14 +25,22 @@ window.MathJax = {
 class MathJaxInlinePattern(InlineProcessor):
     """ """
 
-    def __init__(self, pattern, extension):
+    def __init__(self, pattern, tag, extension):
         super().__init__(pattern)
         self.extension = extension
+        self.tag = tag
 
     def handleMatch(self, m, data):
         text = m.group("math")
         text = text.replace("}", "} ")
-        return "\(" + text + "\)", m.start(0), m.end(0)
+
+        ret_text = text
+        if self.tag == "div":
+            ret_text = "\[" + text + "\]"
+        else:
+            ret_text = "\(" + text + "\)"
+
+        return ret_text, m.start(0), m.end(0)
 
 
 class Md4MathjaxExtension(Extension):
@@ -57,10 +67,25 @@ class Md4MathjaxExtension(Extension):
         # later we will use it
         self.md = md
         # Regex to detect mathjax
-        mathjax_inline_regex1 = r"\$(?P<math>[^\$]*?[^ ])\$"
-
+        mathjax_inline_regex = (
+            r"(?<!\$)\$(?!\$)"
+            r"(?P<math>.+?)"
+            r"(?<!\$)\$(?!\$)"
+        )
+        mathjax_display_regex = (
+            r"(?<!\$)\$\$(?!\$)"
+            r"(?P<math>.+?)"
+            r"(?<!\$)\$\$(?!\$)"
+        )
         md.inlinePatterns.register(
-            MathJaxInlinePattern(mathjax_inline_regex1, self), "mathjax_inlined1", 190
+            MathJaxInlinePattern(mathjax_inline_regex, "span", self),
+            "mathjax_inlined1",
+            190,
+        )
+        md.inlinePatterns.register(
+            MathJaxInlinePattern(mathjax_display_regex, "div", self),
+            "mathjax_displayed1",
+            182,
         )
 
 
