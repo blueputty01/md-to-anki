@@ -2,6 +2,8 @@ beautifulsoup4==4.13.3
 Markdown==3.7
 markdown-it-py==3.0.0
 mdurl==0.1.2
+mypy==1.11.2
+mypy-extensions==1.0.0
 Pygments==2.19.1
 rich==13.9.4
 soupsieve==2.6
