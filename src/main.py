@@ -95,12 +95,41 @@ def process_file(
 def parse_args():
     parser = argparse.ArgumentParser(prog="md-to-anki")
     parser.add_argument("-f", "--force", action="store_true")
+    parser.add_argument("-t", "--temp", action="store_true")
     return parser.parse_args()
 
 
 def main():
     console = Console()
     args = parse_args()
+
+    if args.temp:
+        while True:
+            try:
+                user_input = []
+                print("Please enter your markdown. Press Ctrl+D (EOF) to finish:")
+                while True:
+                    try:
+                        line = input()
+                    except KeyboardInterrupt:
+                        print("\nExiting...")
+                        exit()
+                    except EOFError:
+                        user_input = "\n".join(user_input)
+                        parsed_cards = parser.parse_markdown(user_input, Path())
+                        print("\n")
+                        for idx, card in enumerate(parsed_cards):
+                            print(f"Card {idx + 1}:")
+                            print("Text:")
+                            print(f"{card.text}")
+                            print("Extra:")
+                            print(f"{card.extra}")
+                            print("\n")
+                        break
+                    user_input.append(line)
+            except KeyboardInterrupt:
+                print("\nExiting...")
+                exit()
 
     with Progress(console=console, transient=True) as progress:
         task = None

@@ -44,6 +44,12 @@ pip install -r requirements.txt
 * Images (supports Obsidian `[|size](path-to-image.png)` syntax for image size)
 * Uses [anki-connect](https://github.com/FooSoft/anki-connect#media-actions) to automatically add parsed data to Anki
 
+### Temp mode 
+
+Run `python src/main.py --temp` to take in markdown formatted text from standard input. The Anki-formatted text will print to standard output. 
+
+This is useful for quickly moving LLM output to Anki, bypassing the markdown file step.
+
 ## Cloze deletion syntax
 
 All notes are imported to the cloze type. Any bold text, notated by markdown `**bold text**` is converted to cloze
