@@ -7,4 +7,6 @@ mypy-extensions==1.0.0
 Pygments==2.19.1
 rich==13.9.4
 soupsieve==2.6
+types-Markdown==3.8.0.20250415
+types-beautifulsoup4==4.12.0.20240907
 typing_extensions==4.12.2
