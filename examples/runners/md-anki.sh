@@ -9,7 +9,7 @@ source venv/bin/activate
 cd src || exit
 
 # Run the Python script
-python main.py
+python main.py "$@" # pass all arguments to the script
 
 # Deactivate the virtual environment (optional)
 deactivate
