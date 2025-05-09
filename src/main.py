@@ -104,6 +104,7 @@ def main():
     args = parse_args()
 
     if args.temp:
+        NEW_LINE = "<br/>"
         while True:
             try:
                 user_input = []
@@ -119,11 +120,13 @@ def main():
                         parsed_cards = parser.parse_markdown(user_input, Path())
                         print("\n")
                         for idx, card in enumerate(parsed_cards):
+                            text = card.text.replace(NEW_LINE, "")
+                            extra = card.extra.replace(NEW_LINE, "")
                             print(f"Card {idx + 1}:")
                             print("Text:")
-                            print(f"{card.text}")
+                            print(f"{text}")
                             print("Extra:")
-                            print(f"{card.extra}")
+                            print(f"{extra}")
                             print("\n")
                         break
                     user_input.append(line)
