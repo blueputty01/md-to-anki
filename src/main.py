@@ -207,8 +207,9 @@ def main():
 
                         continue
 
-                    with open(file_path, "a+", encoding="utf-8") as f:
-                        f.write("\n***\n")
+                    if not args.force:
+                        with open(file_path, "a+", encoding="utf-8") as f:
+                            f.write("\n***\n")
 
                     progress.advance(task)
 
