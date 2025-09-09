@@ -2,8 +2,6 @@
 /.venv
 __pycache__
 
-deckConsts.py
-
 .DS_Store
 
 /runners

@@ -11,7 +11,7 @@ import parser
 from utils import anki
 from utils import utils
 
-from deckConsts import DECKS, IGNORE_KEYWORDS  # type: ignore
+from deck_consts import DECKS, IGNORE_KEYWORDS  # type: ignore
 
 DELIMITER = "***"
 
@@ -104,6 +104,7 @@ def main():
     args = parse_args()
 
     if args.temp:
+        # possibly make this an argument instead of mandating in cases like numbered lists, etc
         NEW_LINE = "<br/>"
         while True:
             try:

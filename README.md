@@ -19,11 +19,13 @@ DECKS = {
 
 # automatically builds full key/value path mapping
 DECKS = {k: ROOT + v for k, v in DECKS.items()}
-# if the title of the markdown file contains any of these keywords, it will be ignored
+# if the title of the markdown file contains any of these keywords, it will be ignored. It will also be ignored if it starts with "_"
 IGNORE_KEYWORDS = "discussion"
 # output directory for any errors
 OUTPUT_DIR = ""
 ```
+
+I have written a script to auto-populate this information as well. It assumes a deck structure of [general topic]::[course/specific topic]
 
 3. Suggested: set up virtual environment and install dependencies
 
@@ -38,15 +40,15 @@ pip install -r requirements.txt
 
 ## Features ⚒️
 
-* LaTeX support via MathJax
-* Cloze deletion (both inside and outside MathJax)
-* Syntax highlighting (must set up [pygments.css](https://github.com/richleland/pygments-css) in Anki card styles)
-* Images (supports Obsidian `[|size](path-to-image.png)` syntax for image size)
-* Uses [anki-connect](https://github.com/FooSoft/anki-connect#media-actions) to automatically add parsed data to Anki
+- LaTeX support via MathJax
+- Cloze deletion (both inside and outside MathJax)
+- Syntax highlighting (must set up [pygments.css](https://github.com/richleland/pygments-css) in Anki card styles)
+- Images (supports Obsidian `[|size](path-to-image.png)` syntax for image size)
+- Uses [anki-connect](https://github.com/FooSoft/anki-connect#media-actions) to automatically add parsed data to Anki
 
-### Temp mode 
+### Temp mode
 
-Run `python src/main.py --temp` to take in markdown formatted text from standard input. The Anki-formatted text will print to standard output. 
+Run `python src/main.py --temp` to take in markdown formatted text from standard input. The Anki-formatted text will print to standard output.
 
 This is useful for quickly moving LLM output to Anki, bypassing the markdown file step.
 
@@ -83,40 +85,39 @@ Indented text refer to text in the extra field for the card directly above.
 Alternatively, an extra field may be surrounded by `---`.
 
 ```markdown
-
 The **Articles of Confederation** defined the government that ran the American Revolution.
 
 ---
 
 This text is in the extra field
 
-* Land Ordinance Act of 1785
-    * allowed federal government to sell western lands
-        * pay off national debt
-        * organize new lands into townships and public schools
-* Northwest Ordinance of 1787
-    * provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
+- Land Ordinance Act of 1785
+  - allowed federal government to sell western lands
+    - pay off national debt
+    - organize new lands into townships and public schools
+- Northwest Ordinance of 1787
+  - provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
 
 ---
 
 This is another card; **this text will be marked for cloze**.
 This line is in the extra field.
-
 ```
 
 ### Parsed result of note 1:
 
 Text:
+
 > The {{c1::Articles of Confederation}} defined the government that ran the American Revolution.
 
 Extra:
 
-> * Land Ordinance Act of 1785
->   * allowed federal government to sell western lands
->   * pay off national debt
->   * organize new lands into townships and public schools
-> * Northwest Ordinance of 1787
->   * provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
+> - Land Ordinance Act of 1785
+>   - allowed federal government to sell western lands
+>   - pay off national debt
+>   - organize new lands into townships and public schools
+> - Northwest Ordinance of 1787
+>   - provided that when new territory reached population of 60K → could apply for statehood with no slavery allowed
 
 # How it works 🛠️
 
@@ -130,4 +131,3 @@ Feel free to contribute to this project by opening an issue or creating a pull r
 If adding a package, please run ` pip freeze > requirements.txt` to update the requirements.txt file.
 
 Please ensure that code is typed properly with `mypy`
-
